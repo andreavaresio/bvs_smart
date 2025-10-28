@@ -1,0 +1,94 @@
+
+1) Aggancia il device con cavo usb
+2) npx react-native start
+3) cd /home/david/Android/Sdk/platform-tools 
+  3a) ./adb reverse tcp:8081 tcp:8081
+  3b) ./adb reverse --list
+
+---
+
+ il 50MP spesso NON è esposto via Camera2 standard: il vendor camera usa una modalità proprietaria “alta risoluzione” non accessibile alle app terze. In
+  questi casi Camera2 rende disponibili solo risoluzioni “binned” intorno ai 12MP.
+
+  non compare ~50MP, il G52 non espone quella modalità tramite Camera2.
+
+  modalità “Ultra Res”)
+
+  le app di terze parti vedono solo la versione binning intorno a 12MP
+
+---
+
+
+Noi lavoriamo in `bare react native`
+
+Per massima qualità e controllo, bare React Native è la scelta giusta.
+
+React Native v0.82.0 is now available (your project is running on v0.74.3).
+
+
+
+
+
+  - Creazione: `npx @react-native-community/cli@latest init Camera1 --version 0.74.3`
+  - Pacchetti: `npm i react-native-vision-camera@^3 @react-native-camera-roll/camera-roll react-native-fs`
+  - Android:
+      - In android/app/build.gradle: compileSdkVersion 33, targetSdkVersion 33, minSdkVersion 24
+      - In android/app/src/main/AndroidManifest.xml aggiungi i permessi da apisfero-camera-high-quality/CameraHQ/
+  ANDROID_MANIFEST.snippet.xml
+  - iOS:
+      - In ios/<AppName>/Info.plist incolla le chiavi da apisfero-camera-high-quality/CameraHQ/IOS_Info.plist.snippet.xml
+      - cd ios && pod install && cd ..
+  - App:
+      - Copia apisfero-camera-high-quality/CameraHQ/App.js in CameraHQ/App.js
+  - Avvio: npm run start in un terminale, npm run android (o npx react-native run-ios su macOS)
+
+npx react-native doctor
+
+export ANDROID_HOME=/home/david/Android/Sdk
+
+Impostazioni → Info sul telefono → tocca “Numero build” 7 volte → torna a Opzioni sviluppatore → abilita
+  “Debug wireless” → “Associa dispositivo con codice”.
+
+
+
+
+  Opzione 1: ADB via Wi‑Fi (consigliata)
+
+  - Requisito: Android 11+ con “Debug wireless” (nessun cavo).
+  - Telefono: Impostazioni → Info sul telefono → tocca “Numero build” 7 volte → torna a Opzioni sviluppatore → abilita
+  “Debug wireless” → “Associa dispositivo con codice”.
+  - PC: nel progetto, costruisci l’APK:
+      - cd android && ./gradlew assembleDebug
+      - APK: android/app/build/outputs/apk/debug/app-debug.apk
+  - PC: associa ed installa
+      - adb pair IP:PORTA (inserisci il codice mostrato sul telefono)
+      - adb connect IP:PORTA_DEBUG (porta di connessione, diversa da quella di pairing)
+      - adb devices (verifica che compaia “device”)
+      - adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+  - Poi puoi usare anche npx react-native run-android (ora che ADB è connesso via Wi‑Fi).
+
+
+
+
+npx react-native start --host 0.0.0.0
+
+npx react-native start --reset-cache
+
+
+
+---
+
+1. Avvia Metro bundler da terminale in Camera1 con `npx react-native start`.
+2. In un altro terminale lancia `npx react-native run-android` (tenendo un emulatore avviato oppure un device con USB debugging attivo).
+3. Al primo avvio concedi i permessi fotocamera e galleria; poi usa il pulsante “Scatta” e controlla che la foto compaia nella Galleria.
+
+
+
+
+
+  Perché potresti non poter passare subito a 0.82
+
+  - Requisiti toolchain più recenti: Node, Java 17, Gradle/AGP, Xcode/CocoaPods aggiornati.
+  - Moduli nativi non ancora compatibili con le versioni recenti o con la “New Architecture” (Fabric/TurboModules).
+  - Cambiamenti di template Android/iOS (Gradle, Kotlin, Podfile) che richiedono adeguamenti manuali.
+  - Se usi Expo Managed, la versione RN è legata alla SDK di Expo, non scegli 0.82 liberamente.
