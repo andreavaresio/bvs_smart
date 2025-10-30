@@ -30,6 +30,8 @@ const BEEHIVES = [
 ];
 
 const version = '0.0.1';
+const DEVICE_CAPABILITIES_ENDPOINT = 'https://www.meditazionearmoniosa.ovh/beevs-smart/api.php';
+const DEVICE_CAPABILITIES_API_KEY = 'asdfjdsl567567sadfsda';
 
 const ensureAndroidMediaPermission = async () => {
   if (Platform.OS !== 'android') {
@@ -345,6 +347,146 @@ const getUniquePhotoSizesDesc = device => {
   }
   sizes.sort((a, b) => b.w * b.h - a.w * a.h);
   return sizes;
+};
+
+const hashString = value => {
+  const input = String(value ?? '');
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (Math.imul(31, hash) + input.charCodeAt(i)) >>> 0;
+  }
+  return hash.toString(16);
+};
+
+const slugify = value => {
+  if (typeof value !== 'string') return 'device';
+  const trimmed = value.trim().toLowerCase();
+  const slug = trimmed.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'device';
+};
+
+const getPlatformMetadata = () => {
+  const constants = Platform.constants ?? {};
+  if (Platform.OS === 'android') {
+    return {
+      os: 'android',
+      version: Platform.Version,
+      brand: constants.Brand ?? null,
+      manufacturer: constants.Manufacturer ?? null,
+      model: constants.Model ?? null,
+      fingerprint: constants.Fingerprint ?? null,
+      serial: constants.Serial ?? null,
+    };
+  }
+  return {
+    os: Platform.OS,
+    version: Platform.Version,
+    systemName: constants.systemName ?? null,
+    interfaceIdiom: constants.interfaceIdiom ?? null,
+    osVersion: constants.osVersion ?? null,
+  };
+};
+
+const buildDeviceIdentifier = ({platformMeta, devices}) => {
+  const cameraPart = (Array.isArray(devices) ? devices : [])
+    .map(device => `${device?.position ?? 'unknown'}:${device?.id ?? ''}`)
+    .sort()
+    .join('|');
+  const raw = [
+    platformMeta?.os,
+    platformMeta?.version,
+    platformMeta?.brand,
+    platformMeta?.model,
+    platformMeta?.manufacturer,
+    platformMeta?.systemName,
+    platformMeta?.interfaceIdiom,
+    platformMeta?.osVersion,
+    platformMeta?.fingerprint,
+    platformMeta?.serial,
+    cameraPart,
+  ]
+    .filter(Boolean)
+    .join('|');
+  const hash = hashString(raw);
+  const suffixSource =
+    platformMeta?.model || platformMeta?.systemName || platformMeta?.os || 'device';
+  return `${platformMeta?.os ?? 'device'}-${slugify(suffixSource)}-${hash}`;
+};
+
+const normalizeCameraDevice = device => {
+  if (!device) return null;
+  return {
+    id: device.id,
+    name: device.name,
+    position: device.position,
+    hasFlash: !!device.hasFlash,
+    hasTorch: !!device.hasTorch,
+    supportsLowLightBoost: !!device.supportsLowLightBoost,
+    supportsRawCapture: !!device.supportsRawCapture,
+    isMultiCam: !!device.isMultiCam,
+    minZoom: Number.isFinite(device.minZoom) ? device.minZoom : null,
+    maxZoom: Number.isFinite(device.maxZoom) ? device.maxZoom : null,
+    neutralZoom: Number.isFinite(device.neutralZoom) ? device.neutralZoom : null,
+    minExposure: Number.isFinite(device.minExposure) ? device.minExposure : null,
+    maxExposure: Number.isFinite(device.maxExposure) ? device.maxExposure : null,
+    minFocusDistance: Number.isFinite(device.minFocusDistance)
+      ? device.minFocusDistance
+      : null,
+    hardwareLevel: device.hardwareLevel ?? null,
+    sensorOrientation: device.sensorOrientation ?? null,
+    photoResolutions: getUniquePhotoSizesDesc(device).map(({w, h, mp}) => ({
+      width: w,
+      height: h,
+      megapixels: mp,
+    })),
+  };
+};
+
+const buildSupportsLowLightBoostInfo = frontDevice => {
+  if (!frontDevice) {
+    return {
+      isAvailable: false,
+      isEnabledByDefault: null,
+      canDisable: null,
+      inference: 'front camera not found',
+    };
+  }
+  const supportsLowLightBoost = !!frontDevice.supportsLowLightBoost;
+  return {
+    isAvailable: supportsLowLightBoost,
+    isEnabledByDefault: supportsLowLightBoost ? null : false,
+    canDisable: supportsLowLightBoost,
+    inference: 'derived from supportsLowLightBoost property',
+  };
+};
+
+const buildDeviceCapabilitiesPayload = async () => {
+  try {
+    const devices = await Camera.getAvailableCameraDevices();
+    const cameraDevices = Array.isArray(devices) ? devices : [];
+    const platformMeta = getPlatformMetadata();
+    const normalizedCameras = cameraDevices
+      .map(normalizeCameraDevice)
+      .filter(Boolean);
+    const frontDevice = cameraDevices.find(device => device?.position === 'front') ?? null;
+    const frontCameraSummary = frontDevice
+      ? normalizedCameras.find(camera => camera.id === frontDevice.id) ?? null
+      : null;
+
+    return {
+      deviceid: buildDeviceIdentifier({platformMeta, devices: cameraDevices}),
+      timestamp: new Date().toISOString(),
+      appVersion: version,
+      platform: platformMeta,
+      supportsLowLightBoost: buildSupportsLowLightBoostInfo(frontDevice),
+      frontCamera: frontCameraSummary,
+      photoResolutions: frontCameraSummary?.photoResolutions ?? [],
+      cameras: normalizedCameras,
+    };
+  } catch (error) {
+    console.log('[DeviceCapabilities] failed to collect devices', error);
+    return null;
+  }
 };
 
 const InternalCameraScreen = ({onDone, selectedBeehive, scale}) => {
@@ -804,6 +946,46 @@ const App = () => {
     () => BEEHIVES.find(b => b.id === selectedBeehiveId) ?? null,
     [selectedBeehiveId],
   );
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const syncDeviceCapabilities = async () => {
+      const payload = await buildDeviceCapabilitiesPayload();
+      if (!payload || isCancelled) {
+        return;
+      }
+
+      const hasKey = DEVICE_CAPABILITIES_API_KEY && DEVICE_CAPABILITIES_API_KEY.length > 0;
+      const url = hasKey
+        ? `${DEVICE_CAPABILITIES_ENDPOINT}?api-key=${encodeURIComponent(DEVICE_CAPABILITIES_API_KEY)}`
+        : DEVICE_CAPABILITIES_ENDPOINT;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const text = await response.text();
+        console.log('[DeviceCapabilities] response', {
+          status: response.status,
+          bodyPreview: text.slice(0, 200),
+        });
+      } catch (error) {
+        console.error('[DeviceCapabilities] failed to send', error);
+      }
+    };
+
+    syncDeviceCapabilities();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const handleUpdateSettings = useCallback(({beehiveId, scale: nextScale}) => {
     setSelectedBeehiveId(beehiveId);
