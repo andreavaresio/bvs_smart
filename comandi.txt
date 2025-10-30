@@ -1,3 +1,11 @@
+SIGNED APK
+==========
+
+
+
+
+SVILUPPARE
+==========
 
 1) Aggancia il device con cavo usb
 2) npx react-native start
@@ -5,7 +13,9 @@
   3a) ./adb reverse tcp:8081 tcp:8081
   3b) ./adb reverse --list
 
----
+
+ARCHIVIO
+========
 
  il 50MP spesso NON è esposto via Camera2 standard: il vendor camera usa una modalità proprietaria “alta risoluzione” non accessibile alle app terze. In
   questi casi Camera2 rende disponibili solo risoluzioni “binned” intorno ai 12MP.
@@ -24,10 +34,6 @@ Noi lavoriamo in `bare react native`
 Per massima qualità e controllo, bare React Native è la scelta giusta.
 
 React Native v0.82.0 is now available (your project is running on v0.74.3).
-
-
-
-
 
   - Creazione: `npx @react-native-community/cli@latest init Camera1 --version 0.74.3`
   - Pacchetti: `npm i react-native-vision-camera@^3 @react-native-camera-roll/camera-roll react-native-fs`
