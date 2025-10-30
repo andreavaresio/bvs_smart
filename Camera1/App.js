@@ -472,6 +472,10 @@ const buildDeviceCapabilitiesPayload = async () => {
     const frontCameraSummary = frontDevice
       ? normalizedCameras.find(camera => camera.id === frontDevice.id) ?? null
       : null;
+    const backDevice = cameraDevices.find(device => device?.position === 'back') ?? null;
+    const backCameraSummary = backDevice
+      ? normalizedCameras.find(camera => camera.id === backDevice.id) ?? null
+      : null;
 
     return {
       deviceid: buildDeviceIdentifier({platformMeta, devices: cameraDevices}),
@@ -480,8 +484,8 @@ const buildDeviceCapabilitiesPayload = async () => {
       platform: platformMeta,
       supportsLowLightBoost: buildSupportsLowLightBoostInfo(frontDevice),
       frontCamera: frontCameraSummary,
+      backCamera: backCameraSummary,
       photoResolutions: frontCameraSummary?.photoResolutions ?? [],
-      cameras: normalizedCameras,
     };
   } catch (error) {
     console.log('[DeviceCapabilities] failed to collect devices', error);
