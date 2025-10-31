@@ -29,7 +29,7 @@ const BEEHIVES = [
   {id: 'IT-a2cb09a4-eac0-4d4e-906e-894e74eb4fcd', label: 'thinkphone'},
 ];
 
-const version = '0.0.1';
+const version = '0.0.4';
 const DEVICE_CAPABILITIES_ENDPOINT = 'https://www.meditazionearmoniosa.ovh/beevs-smart/api.php';
 const DEVICE_CAPABILITIES_API_KEY = 'asdfjdsl567567sadfsda';
 
