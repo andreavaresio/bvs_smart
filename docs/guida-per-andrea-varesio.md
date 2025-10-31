@@ -1,3 +1,4 @@
+Ok
 Perfetto ✅
 Ecco una versione **chiara, ordinata e completa** delle istruzioni da mandare al tuo collega per eseguire la tua app *bare React Native* su un device Android collegato via USB, usando Android Studio o il terminale.
 

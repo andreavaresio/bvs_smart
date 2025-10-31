@@ -1,0 +1,31 @@
+
+
+Q. Come mai ad Andrea non funziona la Camera correttamente? (31 Ottobre 2025)
+
+A. The root cause is almost certainly the enterprise security policy on the device blocking camera access.
+
+    I've re-examined the logs, and there are clear indicators of enterprise software running:
+
+    * 10-30 19:04:52.933 ... Start proc 12933:com.motorola.enterprise.adapter.service/...
+    * 10-30 19:04:52.562 ... I MotoDevicePolicyManagerService: isSecureHardware()
+
+    These log entries confirm that a Motorola-specific enterprise service is active on the device.
+
+    Blocked API Call: When the com.camera1 app attempts to open the camera,
+      the Android system checks with the DevicePolicyManager. The enterprise
+      service has set a policy to block camera access, so the system denies
+      the request.
+
+    Application Hang (ANR): The way the com.camera1 app is written likely causes
+      it to hang when the camera request is denied in this manner. Instead of receiving
+      an immediate error, the call might be blocking the main thread, waiting for a
+      camera that the policy will never allow it to access. This
+      causes an "Application Not Responding" (ANR) error.
+
+    System Kills the App: The log line isKilledByAm=true (Killed by Activity Manager)
+      confirms the system is terminating the app because it has become unresponsive
+      (the ANR).
+
+    Camera Not Released: Because the app is killed abruptly, it never gets to run its cleanup code,
+      including the camera.release() method. This leaves the camera in a bad state,
+      which can cause the errors seen on subsequent launch attempts.
