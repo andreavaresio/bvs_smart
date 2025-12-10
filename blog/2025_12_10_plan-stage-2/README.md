@@ -14,7 +14,8 @@
 | 3 | **Auth, API & Storage** | 3.0 | 🔴 Alta |
 | 4 | **Onboarding & Certificazione** | 2.0 | 🔴 Alta |
 | 5 | **Setup Team** | 0.5 | 🔴 Alta |
-| | **TOTALE STIMATO** | **~7.0 gg** | |
+| 6 | **Realizzazione Log Interno** | 1.0 | 🔴 Alta |
+| | **TOTALE STIMATO** | **~8.0 gg** | |
 
 ---
 
@@ -64,6 +65,16 @@
     *   [ ] Installazione Expo CLI e dipendenze necessarie sulle macchine dei dev.
     *   [ ] Condivisione configurazione e best practice di sviluppo.
     *   [ ] Documentazione rapida per l'avvio del progetto.
+
+### 6. Realizzazione Log Interno
+*   **Stima:** 1 Giorno
+*   **Obiettivo:** Implementare un sistema di logging interno all'app per la raccolta di riscontri in caso di anomalie, con funzionalità di download o condivisione.
+*   **Task:**
+    *   [ ] Definizione formato log (timestamp e messaggio).
+    *   [ ] Implementazione meccanismo di scrittura log in un file locale (txt).
+    *   [ ] Sviluppo interfaccia utente per visualizzazione log.
+    *   [ ] Funzionalità di download del file di log.
+    *   [ ] Funzionalità di condivisione del file di log.
 
 
 ---
