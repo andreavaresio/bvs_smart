@@ -5,6 +5,19 @@
 
 ---
 
+## 📋 Riepilogo Esecutivo (Executive Summary)
+
+| # | Attività | Stima (Giorni) | Priorità |
+|:-:|:---|:---:|:---:|
+| 1 | **Analisi e Progettazione** | 0.5 | 🔴 Alta |
+| 2 | **Migrazione a Expo** | 1.0 | 🔴 Alta |
+| 3 | **Auth, API & Storage** | 3.0 | 🔴 Alta |
+| 4 | **Onboarding & Certificazione** | 2.0 | 🔴 Alta |
+| 5 | **Setup Team** | 0.5 | 🔴 Alta |
+| | **TOTALE STIMATO** | **~7.0 gg** | |
+
+---
+
 ## 🚀 Priorità Immediata (Immediate Priority)
 
 **Stima Totale Fase:** ~7 Giorni
