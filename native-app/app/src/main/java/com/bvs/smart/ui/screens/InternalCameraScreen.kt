@@ -110,38 +110,39 @@ fun CameraContent(
     
     var isSaving by remember { mutableStateOf(false) }
 
+    // Create the PreviewView only once
+    val previewView = remember { PreviewView(context) }
+
+    // Bind camera to lifecycle only once when the composable enters the screen
+    LaunchedEffect(lifecycleOwner) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+        val cameraProvider = cameraProviderFuture.get()
+        
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                preview,
+                imageCapture
+            )
+            
+            preview.setSurfaceProvider(previewView.surfaceProvider)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(DarkBackground)) {
-        // AndroidView: The bridge between Compose and classic Android Views.
-        // CameraX uses a "PreviewView" which is a classic View, so we wrap it here.
+        // AndroidView now just displays the pre-created view
         AndroidView(
-            factory = { ctx ->
-                // This block runs once to create the View.
-                PreviewView(ctx).apply {
+            factory = { 
+                previewView.apply {
                     scaleType = PreviewView.ScaleType.FILL_CENTER
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                }
+                } 
             },
-            modifier = Modifier.fillMaxSize(),
-            update = { previewView ->
-                // This block runs when the view needs an update.
-                // Here we bind the camera lifecycle.
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageCapture
-                        )
-                        preview.setSurfaceProvider(previewView.surfaceProvider)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(context))
-            }
+            modifier = Modifier.fillMaxSize()
         )
 
         // Overlay UI controls on top of the camera preview
