@@ -13,6 +13,9 @@
 - [x] Add educational comments for Jetpack Compose beginners
 - [x] Implement Device Capabilities sync logic
 - [ ] Add unit tests for network and data layers
+- [ ] Test In-app camera flow (with confirmation dialog)
+- [ ] Test Device-camera flow
+- [ ] Test Gallery selection and upload flow
 - [ ] Perform UI testing for the main flows
 
 ## Story: Strumenti di Sviluppo

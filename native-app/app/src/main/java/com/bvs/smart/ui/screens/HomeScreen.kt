@@ -113,9 +113,9 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Buttons
-            PrimaryButton(text = "Internal Photo", onClick = onInternalCamera)
+            PrimaryButton(text = "In-app camera", onClick = onInternalCamera)
             Spacer(modifier = Modifier.height(16.dp))
-            PrimaryButton(text = "External Photo", onClick = onExternalCamera)
+            PrimaryButton(text = "Device-camera", onClick = onExternalCamera)
             Spacer(modifier = Modifier.height(16.dp))
             PrimaryButton(text = "Gallery", onClick = onGallery)
         }

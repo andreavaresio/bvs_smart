@@ -4,6 +4,7 @@ import com.bvs.smart.data.DeviceCapabilities
 import com.bvs.smart.data.UploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Multipart
@@ -20,7 +21,7 @@ interface ApiService {
         @Url url: String,
         @Query("api-key") apiKey: String?,
         @Body payload: DeviceCapabilities
-    ): Response<String>
+    ): Response<ResponseBody>
 
     @Multipart
     @POST

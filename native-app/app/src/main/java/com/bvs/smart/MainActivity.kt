@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
 
             // External Camera State
             var tempExternalUri by remember { mutableStateOf<Uri?>(null) }
+            
+            // Pending Upload State (for confirmation dialog)
+            var pendingUploadUri by remember { mutableStateOf<Uri?>(null) }
 
             // registerForActivityResult is used to launch other activities (like the Camera app)
             // and handle the result (success/failure/data) in a callback.
@@ -62,16 +65,8 @@ class MainActivity : ComponentActivity() {
                 contract = ActivityResultContracts.TakePicture()
             ) { success ->
                 if (success && tempExternalUri != null) {
-                    val uri = tempExternalUri!!
-                    // Handle upload
-                    isUploading = true
-                    uploadPhoto(
-                        context = this,
-                        uri = uri,
-                        beehive = selectedBeehive,
-                        scale = scale,
-                        onComplete = { isUploading = false }
-                    )
+                    // For external camera, we set pending URI to show confirmation
+                    pendingUploadUri = tempExternalUri!!
                 }
             }
 
@@ -113,15 +108,9 @@ class MainActivity : ComponentActivity() {
                         beehiveLabel = selectedBeehive.label,
                         scale = scale,
                         onPhotoCaptured = { uri, _, _ ->
+                            // Instead of uploading, we set the pending URI and go back to home
+                            pendingUploadUri = uri
                             currentScreen = "home"
-                            isUploading = true
-                            uploadPhoto(
-                                context = this@MainActivity,
-                                uri = uri,
-                                beehive = selectedBeehive,
-                                scale = scale,
-                                onComplete = { isUploading = false }
-                            )
                         },
                         onBack = { currentScreen = "home" }
                     )
@@ -129,16 +118,44 @@ class MainActivity : ComponentActivity() {
                     "gallery" -> GalleryScreen(
                         onPhotoSelected = { uri ->
                             currentScreen = "home"
-                            isUploading = true
-                            uploadPhoto(
-                                context = this@MainActivity,
-                                uri = uri,
-                                beehive = selectedBeehive,
-                                scale = scale,
-                                onComplete = { isUploading = false }
-                            )
+                            pendingUploadUri = uri
                         },
                         onBack = { currentScreen = "home" }
+                    )
+                }
+
+                // Confirmation Dialog
+                if (pendingUploadUri != null) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { pendingUploadUri = null },
+                        title = { androidx.compose.material3.Text("Conferma Invio") },
+                        text = { androidx.compose.material3.Text("Vuoi inviare la foto al server?") },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(
+                                onClick = {
+                                    val uri = pendingUploadUri!!
+                                    pendingUploadUri = null
+                                    isUploading = true
+                                    uploadPhoto(
+                                        context = this@MainActivity,
+                                        uri = uri,
+                                        beehive = selectedBeehive,
+                                        scale = scale,
+                                        onComplete = { isUploading = false }
+                                    )
+                                }
+                            ) {
+                                androidx.compose.material3.Text("Sì", color = YellowPrimary)
+                            }
+                        },
+                        dismissButton = {
+                            androidx.compose.material3.TextButton(onClick = { pendingUploadUri = null }) {
+                                androidx.compose.material3.Text("No", color = androidx.compose.ui.graphics.Color.Gray)
+                            }
+                        },
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF1A1A1A),
+                        titleContentColor = androidx.compose.ui.graphics.Color.White,
+                        textContentColor = androidx.compose.ui.graphics.Color.White
                     )
                 }
 
