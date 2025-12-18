@@ -1,0 +1,179 @@
+{
+	"info": {
+		"_postman_id": "abf946c3-3625-4ccb-b9fc-36a5171957ae",
+		"name": "Apisfero bsv smart - sviluppo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1190309",
+		"_collection_link": "https://red-rocket-908519.postman.co/workspace/pshave~b765e941-6ed5-473d-baee-51caeaba28b5/collection/1190309-abf946c3-3625-4ccb-b9fc-36a5171957ae?action=share&source=collection_link&creator=1190309"
+	},
+	"item": [
+		{
+			"name": "get-resources",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "d@d.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Ap1sf3r0123.",
+							"type": "text"
+						},
+						{
+							"key": "scanner",
+							"value": "SCANNER_DEMO_1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://ec200296.seewebcloud.it/api/v4/get-resources",
+					"protocol": "https",
+					"host": [
+						"ec200296",
+						"seewebcloud",
+						"it"
+					],
+					"path": [
+						"api",
+						"v4",
+						"get-resources"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post image",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "d@d.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Ap1sf3r0123.",
+							"type": "text"
+						},
+						{
+							"key": "files[]",
+							"type": "file",
+							"src": "/D:/Apisfero/Images/thinkphone/IMG_20251021_172519298_32x24_h23.9cm.jpg"
+						},
+						{
+							"key": "arniaId",
+							"value": "IT-164df302-8a10-4dae-8e72-67ca48d15d97",
+							"type": "text"
+						},
+						{
+							"key": "note",
+							"value": "pippo",
+							"type": "text"
+						},
+						{
+							"key": "ScaleforConta",
+							"value": "1.0",
+							"type": "text"
+						},
+						{
+							"key": "timestamp",
+							"value": "2025-10-17T19-39-11.695Z",
+							"type": "text"
+						},
+						{
+							"key": "GPS",
+							"value": "45.0352891,7.5168128",
+							"type": "text"
+						},
+						{
+							"key": "NumeroGGPermanenza",
+							"value": "2.0",
+							"type": "text"
+						},
+						{
+							"key": "data_prelievo_data",
+							"value": "2025-10-17",
+							"type": "text"
+						},
+						{
+							"key": "data_prelievo_time",
+							"value": "19:38",
+							"type": "text"
+						},
+						{
+							"key": "tipo_misura",
+							"value": "CadutaNaturale",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://ec200296.seewebcloud.it/api/v4/APIUploadImage",
+					"protocol": "https",
+					"host": [
+						"ec200296",
+						"seewebcloud",
+						"it"
+					],
+					"path": [
+						"api",
+						"v4",
+						"APIUploadImage"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASEURL",
+			"value": ""
+		}
+	]
+}

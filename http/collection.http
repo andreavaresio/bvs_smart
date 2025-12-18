@@ -1,0 +1,75 @@
+# Apisfero bsv smart - sviluppo
+
+###
+# @name get-resources
+POST https://ec200296.seewebcloud.it/api/v4/get-resources
+Content-Type: application/json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="username"
+
+d@d.com
+--WebAppBoundary
+Content-Disposition: form-data; name="password"
+
+Ap1sf3r0123.
+--WebAppBoundary
+Content-Disposition: form-data; name="scanner"
+
+SCANNER_DEMO_1
+--WebAppBoundary
+
+###
+# @name post image
+POST https://ec200296.seewebcloud.it/api/v4/APIUploadImage
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="username"
+
+d@d.com
+--WebAppBoundary
+Content-Disposition: form-data; name="password"
+
+Ap1sf3r0123.
+--WebAppBoundary
+Content-Disposition: form-data; name="files[]"; filename="IMG_20251021_172519298_32x24_h23.9cm.jpg"
+
+< /D:/Apisfero/Images/thinkphone/IMG_20251021_172519298_32x24_h23.9cm.jpg
+--WebAppBoundary
+Content-Disposition: form-data; name="arniaId"
+
+IT-164df302-8a10-4dae-8e72-67ca48d15d97
+--WebAppBoundary
+Content-Disposition: form-data; name="note"
+
+pippo
+--WebAppBoundary
+Content-Disposition: form-data; name="ScaleforConta"
+
+1.0
+--WebAppBoundary
+Content-Disposition: form-data; name="timestamp"
+
+2025-10-17T19-39-11.695Z
+--WebAppBoundary
+Content-Disposition: form-data; name="GPS"
+
+45.0352891,7.5168128
+--WebAppBoundary
+Content-Disposition: form-data; name="NumeroGGPermanenza"
+
+2.0
+--WebAppBoundary
+Content-Disposition: form-data; name="data_prelievo_data"
+
+2025-10-17
+--WebAppBoundary
+Content-Disposition: form-data; name="data_prelievo_time"
+
+19:38
+--WebAppBoundary
+Content-Disposition: form-data; name="tipo_misura"
+
+CadutaNaturale
+--WebAppBoundary
