@@ -1,22 +1,13 @@
 # TASKS
 
-## Current Sprint: Kotlin Native Migration
-**Story: Kotlin native android migration**
+## Backlog / Future Improvements
 
-- [x] Initial project scaffolding with Gradle (Kotlin DSL)
-- [x] Define core data models (Beehive, DeviceCapabilities)
-- [x] Implement Retrofit network layer for API communication
-- [x] Create reusable UI components (PrimaryButton, SecondaryButton, BeehiveBadge)
-- [x] Implement Home Screen with settings dialog
-- [x] Implement Internal Camera screen using CameraX and AndroidView
-- [x] Implement Gallery screen with MediaStore integration and Coil
-- [x] Add educational comments for Jetpack Compose beginners
-- [x] Implement Device Capabilities sync logic
+- [ ] Implement Server API Login (Username/Password authentication)
+- [ ] Fetch dynamic Beehive Registry (Angrafiche Arnie) from server API
+- [ ] Update Photo Upload to use dynamic session/auth tokens
 - [ ] Add unit tests for network and data layers
-- [ ] Test In-app camera flow (with confirmation dialog)
-- [ ] Test Device-camera flow
-- [ ] Test Gallery selection and upload flow
 - [ ] Perform UI testing for the main flows
+- [ ] Implement offline mode / retry logic for uploads
 
 ## Story: Strumenti di Sviluppo
 **Ottimizzazione del workflow per Jetpack Compose**

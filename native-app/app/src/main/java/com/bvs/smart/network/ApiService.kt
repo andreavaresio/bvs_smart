@@ -29,5 +29,5 @@ interface ApiService {
         @Url url: String,
         @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>,
         @Part file: MultipartBody.Part
-    ): Response<UploadResponse>
+    ): Response<ResponseBody>
 }

@@ -8,17 +8,29 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.FileProvider
 import com.bvs.smart.data.BEEHIVES
 import com.bvs.smart.data.Beehive
@@ -126,12 +138,12 @@ class MainActivity : ComponentActivity() {
 
                 // Confirmation Dialog
                 if (pendingUploadUri != null) {
-                    androidx.compose.material3.AlertDialog(
+                    AlertDialog(
                         onDismissRequest = { pendingUploadUri = null },
-                        title = { androidx.compose.material3.Text("Conferma Invio") },
-                        text = { androidx.compose.material3.Text("Vuoi inviare la foto al server?") },
+                        title = { Text("Conferma Invio") },
+                        text = { Text("Vuoi inviare la foto al server?") },
                         confirmButton = {
-                            androidx.compose.material3.TextButton(
+                            TextButton(
                                 onClick = {
                                     val uri = pendingUploadUri!!
                                     pendingUploadUri = null
@@ -145,24 +157,41 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             ) {
-                                androidx.compose.material3.Text("Sì", color = YellowPrimary)
+                                Text("Sì", color = YellowPrimary)
                             }
                         },
                         dismissButton = {
-                            androidx.compose.material3.TextButton(onClick = { pendingUploadUri = null }) {
-                                androidx.compose.material3.Text("No", color = androidx.compose.ui.graphics.Color.Gray)
+                            TextButton(onClick = { pendingUploadUri = null }) {
+                                Text("No", color = Color.Gray)
                             }
                         },
-                        containerColor = androidx.compose.ui.graphics.Color(0xFF1A1A1A),
-                        titleContentColor = androidx.compose.ui.graphics.Color.White,
-                        textContentColor = androidx.compose.ui.graphics.Color.White
+                        containerColor = Color(0xFF1A1A1A),
+                        titleContentColor = Color.White,
+                        textContentColor = Color.White
                     )
                 }
 
                 if (isUploading) {
-                    // Overlay a loading spinner on top of everything
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = YellowPrimary)
+                    // Loading Overlay
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.7f))
+                            .clickable(enabled = false) {} // Block interactions
+                            .zIndex(10f), // Ensure it's on top
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator(color = YellowPrimary)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Invio in corso...",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }
@@ -234,9 +263,10 @@ class MainActivity : ComponentActivity() {
 
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                     if (response.isSuccessful) {
+                        val message = response.body()?.string() ?: "Upload OK"
                         Toast.makeText(
                             context,
-                            "Upload completato: ${response.body()?.message}",
+                            "Upload completato: $message",
                             Toast.LENGTH_LONG
                         ).show()
                     } else {
