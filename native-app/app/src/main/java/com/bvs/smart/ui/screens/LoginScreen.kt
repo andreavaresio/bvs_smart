@@ -200,4 +200,5 @@ fun LoginScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp)
         )
+    }
 }
