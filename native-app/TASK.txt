@@ -1,25 +1,15 @@
 LISTA DEI TASK (80 COL)
 ================================================================================
 
-CURRENT SPRINT: LOGIN & AUTHENTICATION
-======================================
-Obiettivo: Implementare il flusso di accesso sicuro tramite API del server.
-
-[X] Creazione interfaccia UI per la schermata di Login
-[X] Implementazione chiamate API Retrofit per l'autenticazione
-[ ] Gestione del token di sessione e persistenza (Secure Storage)
-[X] Integrazione del login nel flusso di avvio dell'app
-
-
 EPIC 3: BACKEND & DATA SYNC
 ===========================
 Descrizione: Integrazione profonda con le API del server per autenticazione,
              dati dinamici e resilienza.
 
-STORIA 3.1: INTEGRAZIONE API
-----------------------------
-[ ] Recuperare Anagrafica Arnie dinamica tramite API Server
-[ ] Aggiornare l'Upload Foto per usare token di sessione dinamici
+STORIA 3.1: INTEGRAZIONE API & SESSIONE
+---------------------------------------
+[ ] Gestione del token di sessione e persistenza (DataStore / Secure Storage)
+[ ] Update Photo Upload per usare token di sessione invece di credenziali raw
 [ ] Implementare modalità offline / logica di riprova per gli upload
 
 
