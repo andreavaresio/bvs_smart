@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -18,6 +20,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +36,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.random.Random
+
+private const val COUNTER_BOX_SIZE_DP = 120
 
 @Composable
 fun BeeDanceScreen(onExit: () -> Unit) {
@@ -177,6 +182,24 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                     modifier = Modifier.offset {
                         IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
                     }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(COUNTER_BOX_SIZE_DP.dp)
+                    .background(
+                        color = Color(0x66FFFFFF),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = bees.size.toString(),
+                    color = TextSecondary,
+                    fontSize = 28.sp,
+                    textAlign = TextAlign.Center
                 )
             }
 
