@@ -32,10 +32,12 @@ val BorderColor = Color(0xFFE0E0E0)   // Light gray borders
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = YellowPrimary,
             contentColor = TextPrimary

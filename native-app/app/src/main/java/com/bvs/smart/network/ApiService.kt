@@ -1,7 +1,7 @@
 package com.bvs.smart.network
 
 import com.bvs.smart.data.DeviceCapabilities
-import com.bvs.smart.data.UploadResponse
+import com.bvs.smart.data.ResourceOwner
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -31,15 +31,10 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): Response<ResponseBody>
 
+    @Multipart
     @POST
-    suspend fun login(
+    suspend fun getResources(
         @Url url: String,
-        @Body payload: LoginRequest
-    ): Response<LoginResponse>
-
-    @POST
-    suspend fun getBeehives(
-        @Url url: String,
-        @Query("token") token: String
-    ): Response<List<com.bvs.smart.data.Beehive>>
+        @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>
+    ): Response<List<ResourceOwner>>
 }

@@ -1,6 +1,16 @@
 LISTA DEI TASK (80 COL)
 ================================================================================
 
+CURRENT SPRINT: LOGIN & SECURE AUTH
+===================================
+Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
+
+[ ] Mostrare la lista degli invii
+[ ] Recuperare le SPECIFICHE UFFICIALI delle API di Login (campi e risposte)
+[ ] Testare il flusso di accesso con TUTTI GLI UTENTI e i vari RUOLI
+[ ] Verificare il flusso di login automatico se le credenziali sono presenti
+[ ] log di tutte le chiamate di rete
+
 EPIC 3: BACKEND & DATA SYNC
 ===========================
 Descrizione: Integrazione profonda con le API del server per autenticazione,
@@ -8,8 +18,7 @@ Descrizione: Integrazione profonda con le API del server per autenticazione,
 
 STORIA 3.1: INTEGRAZIONE API & SESSIONE
 ---------------------------------------
-[ ] Gestione del token di sessione e persistenza (DataStore / Secure Storage)
-[ ] Update Photo Upload per usare token di sessione invece di credenziali raw
+[ ] Ottimizzazione ApiRepository per gestione errori centralizzata
 [ ] Implementare modalità offline / logica di riprova per gli upload
 
 
@@ -22,6 +31,8 @@ STORIA 4.1: FEEDBACK UTENTE
 [ ] Risoluzione Foto (Device-camera): Investigare perché non permette di
     selezionare 50MP (attualmente limita a 12.5MP).
     Nota: Probabile effetto del Pixel Binning.
+[ ] VERIFICARE E SISTEMARE: Installando la versione 1.0.8 non vengono richiesti
+    i parametri della fotocamera.
 
 STORIA 4.2: TESTING
 -------------------

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bvs.smart.R
@@ -29,10 +31,13 @@ import com.bvs.smart.ui.components.*
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String, String) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    errorMessage: String?,
+    initialUsername: String,
+    initialPassword: String
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var username by rememberSaveable(initialUsername) { mutableStateOf(initialUsername) }
+    var password by rememberSaveable(initialPassword) { mutableStateOf(initialPassword) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     Box(
@@ -114,21 +119,25 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            PrimaryButton(
-                text = if (isLoading) "Accesso in corso..." else "ACCEDI",
-                onClick = { if (username.isNotBlank() && password.isNotBlank()) onLoginSuccess(username, password) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            TextButton(onClick = { /* Password dimenticata */ }) {
+            if (!errorMessage.isNullOrBlank()) {
                 Text(
-                    text = "Password dimenticata?",
-                    color = TextSecondary,
-                    fontSize = 14.sp
+                    text = errorMessage,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
                 )
             }
+
+            PrimaryButton(
+                text = if (isLoading) "Accesso in corso..." else "ACCEDI",
+                onClick = { if (username.isNotBlank() && password.isNotBlank()) onLoginSuccess(username.trim(), password) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
+            )
+            
         }
     }
 }

@@ -1,14 +1,25 @@
 package com.bvs.smart.data
 
-data class Beehive(
-    val id: String,
-    val label: String
+import com.google.gson.annotations.SerializedName
+
+data class ResourceOwner(
+    @SerializedName("proprietario") val ownerName: String,
+    @SerializedName("codice_bda") val bdaCode: String,
+    @SerializedName("apiari") val apiaries: List<Apiary>
 )
 
-val BEEHIVES = listOf(
-    Beehive("IT-de11cede-1c18-4bd3-a383-a5349ac757a9", "iPhone"),
-    Beehive("IT-e6aa3784-6c9b-4116-af7b-228fa8bbe30d", "motoroloa g82"),
-    Beehive("IT-a2cb09a4-eac0-4d4e-906e-894e74eb4fcd", "thinkphone")
+data class Apiary(
+    @SerializedName("apiaro_nome") val name: String,
+    @SerializedName("localita") val location: String?,
+    @SerializedName("latitude") val latitude: Double?,
+    @SerializedName("longitude") val longitude: Double?,
+    @SerializedName("alveari") val hives: List<Arnia>
+)
+
+data class Arnia(
+    @SerializedName("nome") val name: String,
+    @SerializedName("codice") val code: String,
+    @SerializedName("data_prelievo") val lastSampleDate: String?
 )
 
 data class DeviceCapabilities(
@@ -39,18 +50,4 @@ data class PhotoResolution(
 
 data class UploadResponse(
     val message: String?
-)
-
-data class LoginRequest(
-    val username: String,
-    val password: String,
-    val deviceId: String
-)
-
-data class LoginResponse(
-    val success: Boolean,
-    val message: String?,
-    val token: String?,
-    val userId: String?,
-    val username: String?
 )

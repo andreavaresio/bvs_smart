@@ -71,10 +71,13 @@ class DeviceManager(private val context: Context) {
         )
     }
 
+    // Capability sync is disabled for now; keep the implementation for future reuse.
+    /*
     suspend fun syncCapabilities() {
         try {
             val capabilities = getDeviceCapabilities()
-            val response = NetworkModule.apiService.sendDeviceCapabilities(
+            val service = NetworkModule.createApiService("https://apisferoweb.it/api/v4/")
+            val response = service.sendDeviceCapabilities(
                 url = "https://apisferoweb.it/api/v4/APISyncDeviceCapabilities",
                 apiKey = null,
                 payload = capabilities
@@ -88,4 +91,5 @@ class DeviceManager(private val context: Context) {
             android.util.Log.e("DeviceManager", "Error syncing capabilities", e)
         }
     }
+    */
 }

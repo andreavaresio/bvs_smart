@@ -24,12 +24,10 @@ object NetworkModule {
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    // Base URL is required by Retrofit but we often override it with @Url
-    private const val BASE_URL = "https://apisferoweb.it/"
-
-    val apiService: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
+    fun createApiService(baseUrl: String): ApiService {
+        val normalizedBaseUrl = if (baseUrl.endsWith('/')) baseUrl else "$baseUrl/"
+        return Retrofit.Builder()
+            .baseUrl(normalizedBaseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()

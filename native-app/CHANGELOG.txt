@@ -11,6 +11,13 @@ SPRINT: LOGIN & AUTHENTICATION (COMPLETATA)
 - Implementato caricamento dinamico dell'anagrafica Arnie dal server dopo il login.
 - Gestione indicatori di caricamento e feedback errori durante il login.
 - Migliorata robustezza del sistema di tipi (Type Safety) nelle lambda di navigazione.
+- Task completati:
+- Creare ApiRepository per centralizzare le chiamate (nascondere URL).
+- Implementare Secure Storage (EncryptedSharedPreferences) per credenziali.
+- Modificare Upload Foto per usare Username/Password salvati.
+- Traduzione completa dell'interfaccia da "Beehive" a "Arnia".
+- Implementato Login tramite API Server.
+- Recupero Anagrafica Arnie dinamica tramite API Server.
 
 VERSION 1.0.4 (19 DICEMBRE 2025)
 =================================
