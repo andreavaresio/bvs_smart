@@ -10,7 +10,6 @@ Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
 [ ] Testare il flusso di accesso con TUTTI GLI UTENTI e i vari RUOLI
 [ ] Verificare il flusso di login automatico se le credenziali sono presenti
 [ ] log di tutte le chiamate di rete
-[X] Mostrare la versione dell'app anche nella schermata di login
 [ ] tasto per condividere il log file
 [ ] salvare in qualche modo il log file
 [ ] serve tracciare chi prova l'app e a quale versione?
