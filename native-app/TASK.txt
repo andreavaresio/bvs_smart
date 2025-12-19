@@ -10,6 +10,7 @@ Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
 [ ] Testare il flusso di accesso con TUTTI GLI UTENTI e i vari RUOLI
 [ ] Verificare il flusso di login automatico se le credenziali sono presenti
 [ ] log di tutte le chiamate di rete
+[X] Mostrare la versione dell'app anche nella schermata di login
 
 EPIC 3: BACKEND & DATA SYNC
 ===========================
@@ -28,9 +29,6 @@ Descrizione: Attività di test, fix di bug segnalati e manutenzione del codice.
 
 STORIA 4.1: FEEDBACK UTENTE
 ---------------------------
-[ ] Risoluzione Foto (Device-camera): Investigare perché non permette di
-    selezionare 50MP (attualmente limita a 12.5MP).
-    Nota: Probabile effetto del Pixel Binning.
 [ ] VERIFICARE E SISTEMARE: Installando la versione 1.0.8 non vengono richiesti
     i parametri della fotocamera.
 

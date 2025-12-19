@@ -30,14 +30,18 @@ import com.bvs.smart.ui.components.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String, String) -> Unit,
+    onLoginSuccess: (String, String, String) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
     initialUsername: String,
-    initialPassword: String
+    initialPassword: String,
+    initialScanner: String,
+    versionName: String,
+    versionCode: Int
 ) {
     var username by rememberSaveable(initialUsername) { mutableStateOf(initialUsername) }
     var password by rememberSaveable(initialPassword) { mutableStateOf(initialPassword) }
+    var scanner by rememberSaveable(initialScanner) { mutableStateOf(initialScanner) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     Box(
@@ -79,7 +83,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Email o Username") },
+                label = { Text("Email") },
                 placeholder = { Text("esempio@mail.it") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -119,6 +123,23 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            OutlinedTextField(
+                value = scanner,
+                onValueChange = { scanner = it },
+                label = { Text("Scanner ID") },
+                placeholder = { Text("SCANNER_DEMO_1") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = YellowPrimary,
+                    unfocusedBorderColor = BorderColor
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             if (!errorMessage.isNullOrBlank()) {
                 Text(
                     text = errorMessage,
@@ -133,11 +154,22 @@ fun LoginScreen(
 
             PrimaryButton(
                 text = if (isLoading) "Accesso in corso..." else "ACCEDI",
-                onClick = { if (username.isNotBlank() && password.isNotBlank()) onLoginSuccess(username.trim(), password) },
+                onClick = {
+                    if (username.isNotBlank() && password.isNotBlank() && scanner.isNotBlank()) {
+                        onLoginSuccess(username.trim(), password, scanner.trim())
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading
             )
-            
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Version $versionName ($versionCode)",
+                color = TextSecondary.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
         }
     }
 }

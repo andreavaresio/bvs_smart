@@ -15,18 +15,15 @@ class ApiRepository(
     private val normalizedBaseUrl = if (baseUrl.endsWith('/')) baseUrl else "$baseUrl/"
     private val api = NetworkModule.createApiService(normalizedBaseUrl)
 
-    private companion object {
-        private const val DEFAULT_SCANNER = "SCANNER_APP"
-    }
     private val getResourcesUrl = "${normalizedBaseUrl}get-resources"
     private val uploadImageUrl = "${normalizedBaseUrl}APIUploadImage"
     private val syncCapabilitiesUrl = "${normalizedBaseUrl}APISyncDeviceCapabilities"
 
-    suspend fun getResources(username: String, password: String): Response<List<ResourceOwner>> {
+    suspend fun getResources(username: String, password: String, scanner: String): Response<List<ResourceOwner>> {
         val params = mapOf(
             "username" to username.toRequestBody(MultipartBody.FORM),
             "password" to password.toRequestBody(MultipartBody.FORM),
-            "scanner" to DEFAULT_SCANNER.toRequestBody(MultipartBody.FORM)
+            "scanner" to scanner.toRequestBody(MultipartBody.FORM)
         )
 
         val response = api.getResources(

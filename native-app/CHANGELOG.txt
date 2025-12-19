@@ -18,6 +18,8 @@ SPRINT: LOGIN & AUTHENTICATION (COMPLETATA)
 - Traduzione completa dell'interfaccia da "Beehive" a "Arnia".
 - Implementato Login tramite API Server.
 - Recupero Anagrafica Arnie dinamica tramite API Server.
+- Mostrata la versione dell'app anche nella schermata di login.
+- Investigata la limitazione della camera di sistema a 12.5MP (Pixel Binning).
 
 VERSION 1.0.4 (19 DICEMBRE 2025)
 =================================

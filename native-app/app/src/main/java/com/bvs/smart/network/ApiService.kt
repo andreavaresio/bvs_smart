@@ -16,12 +16,12 @@ import retrofit2.http.Url
 
 interface ApiService {
 
-    @POST
-    suspend fun sendDeviceCapabilities(
-        @Url url: String,
-        @Query("api-key") apiKey: String?,
-        @Body payload: DeviceCapabilities
-    ): Response<ResponseBody>
+//    @POST
+//    suspend fun sendDeviceCapabilities(
+//        @Url url: String,
+//        @Query("api-key") apiKey: String?,
+//        @Body payload: DeviceCapabilities
+//    ): Response<ResponseBody>
 
     @Multipart
     @POST

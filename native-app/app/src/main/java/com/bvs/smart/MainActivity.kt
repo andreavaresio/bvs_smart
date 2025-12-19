@@ -64,6 +64,7 @@ import java.util.Date
 import java.util.Locale
 
 private const val API_BASE_URL = "https://ec200296.seewebcloud.it/api/v4/"
+private const val DEFAULT_SCANNER = "SCANNER_DEMO_1"
 
 private enum class MainScreen {
     LOGIN,
@@ -113,6 +114,7 @@ class MainActivity : ComponentActivity() {
             var tempExternalUri by remember { mutableStateOf<Uri?>(null) }
             var savedUsername by remember { mutableStateOf(authManager.getUsername().orEmpty()) }
             var savedPassword by remember { mutableStateOf(authManager.getPassword().orEmpty()) }
+            var savedScanner by remember { mutableStateOf(DEFAULT_SCANNER) }
 
             val context = this@MainActivity
 
@@ -180,12 +182,12 @@ class MainActivity : ComponentActivity() {
                 Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
                         MainScreen.LOGIN -> LoginScreen(
-                            onLoginSuccess = { username, password ->
+                            onLoginSuccess = { username, password, scanner ->
                                 scope.launch {
                                     isLoggingIn = true
                                     loginError = null
                                     try {
-                                        val response = apiRepository.getResources(username, password)
+                                        val response = apiRepository.getResources(username, password, scanner)
                                         if (response.isSuccessful) {
                                             val payload = response.body().orEmpty()
                                             val allApiaries = payload.flatMap { it.apiaries }
@@ -205,6 +207,7 @@ class MainActivity : ComponentActivity() {
 
                                                 savedUsername = username
                                                 savedPassword = password
+                                                savedScanner = scanner
                                                 authManager.saveSelection(
                                                     apiaryName = selectedApiary?.name,
                                                     hiveCode = selectedHive?.code,
@@ -243,12 +246,15 @@ class MainActivity : ComponentActivity() {
                                     } finally {
                                         isLoggingIn = false
                                     }
-                                }
-                            },
+                        }
+                    },
                             isLoading = isLoggingIn,
                             errorMessage = loginError,
                             initialUsername = savedUsername,
-                            initialPassword = savedPassword
+                            initialPassword = savedPassword,
+                            initialScanner = savedScanner,
+                            versionName = versionName,
+                            versionCode = versionCode
                         )
 
                         MainScreen.HOME -> HomeScreen(
