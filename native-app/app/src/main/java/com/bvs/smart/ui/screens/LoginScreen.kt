@@ -4,7 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -216,13 +217,14 @@ private fun BeeDanceScreen(onExit: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(AppBackground)
-            .clickable { onExit() }
     ) {
         val maxWidthPx = with(density) { constraints.maxWidth.toFloat() }
         val maxHeightPx = with(density) { constraints.maxHeight.toFloat() }
         val beeSizePx = with(density) { beeSize.toPx() }
         val speedPx = with(density) { 180.dp.toPx() }
         val minSpeed = speedPx * 0.4f
+
+        data class Bee(val position: Offset, val velocity: Offset)
 
         fun randomVelocity(): Offset {
             val angle = Random.nextDouble(0.0, PI * 2)
@@ -232,19 +234,24 @@ private fun BeeDanceScreen(onExit: () -> Unit) {
             )
         }
 
-        var position by remember {
-            mutableStateOf(
-                Offset(
-                    x = maxWidthPx / 2f - beeSizePx / 2f,
-                    y = maxHeightPx / 2f - beeSizePx / 2f
-                )
+        fun clampPosition(offset: Offset): Offset {
+            return Offset(
+                x = offset.x.coerceIn(0f, maxWidthPx - beeSizePx),
+                y = offset.y.coerceIn(0f, maxHeightPx - beeSizePx)
             )
         }
 
-        var velocity by remember { mutableStateOf(randomVelocity()) }
+        val bees = remember { mutableStateListOf<Bee>() }
 
         LaunchedEffect(maxWidthPx, maxHeightPx) {
             if (maxWidthPx == 0f || maxHeightPx == 0f) return@LaunchedEffect
+            if (bees.isEmpty()) {
+                val startPosition = Offset(
+                    x = maxWidthPx / 2f - beeSizePx / 2f,
+                    y = maxHeightPx / 2f - beeSizePx / 2f
+                )
+                bees.add(Bee(startPosition, randomVelocity()))
+            }
             var lastTime = 0L
             while (true) {
                 withFrameNanos { frameTime ->
@@ -255,52 +262,86 @@ private fun BeeDanceScreen(onExit: () -> Unit) {
                     val deltaSeconds = (frameTime - lastTime) / 1_000_000_000f
                     lastTime = frameTime
 
-                    var newPos = Offset(
-                        x = position.x + velocity.x * deltaSeconds,
-                        y = position.y + velocity.y * deltaSeconds
-                    )
-                    var newVel = velocity
+                    val snapshot = bees.toList()
+                    snapshot.forEachIndexed { index, bee ->
+                        var newPos = Offset(
+                            x = bee.position.x + bee.velocity.x * deltaSeconds,
+                            y = bee.position.y + bee.velocity.y * deltaSeconds
+                        )
+                        var newVel = bee.velocity
 
-                    if (newPos.x <= 0f) {
-                        newPos = newPos.copy(x = 0f)
-                        val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
-                        newVel = newVel.copy(x = bounce)
-                    } else if (newPos.x >= maxWidthPx - beeSizePx) {
-                        newPos = newPos.copy(x = maxWidthPx - beeSizePx)
-                        val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
-                        newVel = newVel.copy(x = -bounce)
+                        if (newPos.x <= 0f) {
+                            newPos = newPos.copy(x = 0f)
+                            val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                            newVel = newVel.copy(x = bounce)
+                        } else if (newPos.x >= maxWidthPx - beeSizePx) {
+                            newPos = newPos.copy(x = maxWidthPx - beeSizePx)
+                            val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                            newVel = newVel.copy(x = -bounce)
+                        }
+
+                        if (newPos.y <= 0f) {
+                            newPos = newPos.copy(y = 0f)
+                            val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                            newVel = newVel.copy(y = bounce)
+                        } else if (newPos.y >= maxHeightPx - beeSizePx) {
+                            newPos = newPos.copy(y = maxHeightPx - beeSizePx)
+                            val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                            newVel = newVel.copy(y = -bounce)
+                        }
+
+                        val updatedBee = Bee(newPos, newVel)
+                        if (index < bees.size) {
+                            bees[index] = updatedBee
+                        }
                     }
-
-                    if (newPos.y <= 0f) {
-                        newPos = newPos.copy(y = 0f)
-                        val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
-                        newVel = newVel.copy(y = bounce)
-                    } else if (newPos.y >= maxHeightPx - beeSizePx) {
-                        newPos = newPos.copy(y = maxHeightPx - beeSizePx)
-                        val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
-                        newVel = newVel.copy(y = -bounce)
-                    }
-
-                    position = newPos
-                    velocity = newVel
                 }
             }
         }
 
-        Text(
-            text = "🐝",
-            fontSize = 48.sp,
-            modifier = Modifier.offset {
-                IntOffset(position.x.roundToInt(), position.y.roundToInt())
-            }
-        )
-
-        Text(
-            text = "Tocca lo schermo per tornare alla login",
-            color = TextSecondary,
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-        )
+                .fillMaxSize()
+                .pointerInput(bees.size, maxWidthPx, maxHeightPx) {
+                    detectTapGestures { tapOffset ->
+                        val tappedIndex = bees.indexOfFirst { bee ->
+                            tapOffset.x >= bee.position.x &&
+                                tapOffset.x <= bee.position.x + beeSizePx &&
+                                tapOffset.y >= bee.position.y &&
+                                tapOffset.y <= bee.position.y + beeSizePx
+                        }
+                        if (tappedIndex >= 0) {
+                            val startPos = clampPosition(
+                                Offset(
+                                    x = tapOffset.x - beeSizePx / 2f,
+                                    y = tapOffset.y - beeSizePx / 2f
+                                )
+                            )
+                            bees.add(Bee(startPos, randomVelocity()))
+                        } else {
+                            onExit()
+                        }
+                    }
+                }
+        ) {
+            bees.forEach { bee ->
+                Text(
+                    text = "🐝",
+                    fontSize = 48.sp,
+                    modifier = Modifier.offset {
+                        IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
+                    }
+                )
+            }
+
+            Text(
+                text = "Tocca un'ape per aggiungerne un'altra.\nTocca fuori per tornare alla login",
+                color = TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp)
+            )
+        }
     }
 }
