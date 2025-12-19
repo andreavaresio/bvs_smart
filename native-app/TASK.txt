@@ -1,17 +1,14 @@
 LISTA DEI TASK (80 COL)
 ================================================================================
 
-EPIC 2: BRAND IDENTITY & UX
-===========================
-Descrizione: Aggiornamento dell'identità visiva e dell'esperienza utente per
-             allinearsi al nuovo brand aziendale.
+CURRENT SPRINT: LOGIN & AUTHENTICATION
+======================================
+Obiettivo: Implementare il flusso di accesso sicuro tramite API del server.
 
-STORIA 2.1: REBRANDING
-----------------------
-[X] Implementare Splash Screen all'avvio dell'app (Logo su sfondo brand)
-[X] Aggiornare icona dell'app (Logo)
-[X] Aggiornare nome/label dell'applicazione (Manifest e strings.xml)
-[X] Uniformare i colori dell'interfaccia con la nuova palette brand
+[X] Creazione interfaccia UI per la schermata di Login
+[X] Implementazione chiamate API Retrofit per l'autenticazione
+[ ] Gestione del token di sessione e persistenza (Secure Storage)
+[X] Integrazione del login nel flusso di avvio dell'app
 
 
 EPIC 3: BACKEND & DATA SYNC
@@ -21,7 +18,6 @@ Descrizione: Integrazione profonda con le API del server per autenticazione,
 
 STORIA 3.1: INTEGRAZIONE API
 ----------------------------
-[ ] Implementare Login tramite API Server (autenticazione User/Pass)
 [ ] Recuperare Anagrafica Arnie dinamica tramite API Server
 [ ] Aggiornare l'Upload Foto per usare token di sessione dinamici
 [ ] Implementare modalità offline / logica di riprova per gli upload

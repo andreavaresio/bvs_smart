@@ -1,6 +1,17 @@
 STORICO DELLE MODIFICHE (CHANGELOG)
 ================================================================================
 
+VERSION 1.0.4 (19 DICEMBRE 2025)
+=================================
+
+EPIC 2: BRAND IDENTITY & UX (COMPLETATA)
+----------------------------------------
+- Rebranding completo: App rinominata in "BeeVS Mobile".
+- Nuova Icona App (Quadrata e Rotonda) e Logo ufficiale in Home.
+- Tema "Clear & Luminous": Interfaccia chiara con colori brand Giallo/Nero.
+- Fix UI: Bloccato orientamento app in Portrait (verticale) per stabilità layout.
+- Rimossa gestione splash screen custom per un avvio nativo fluido.
+
 VERSION 1.0.3 (19 DICEMBRE 2025)
 =================================
 

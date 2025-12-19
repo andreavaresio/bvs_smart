@@ -56,6 +56,7 @@ fun HomeScreen(
     scale: Double,
     versionName: String,
     versionCode: Int,
+    beehiveList: List<Beehive>,
     onInternalCamera: () -> Unit,
     onExternalCamera: () -> Unit,
     onGallery: () -> Unit,
@@ -147,6 +148,7 @@ fun HomeScreen(
         SettingsDialog(
             currentBeehive = selectedBeehive,
             currentScale = scale,
+            beehiveList = beehiveList,
             onDismiss = { showSettings = false },
             onSave = { beehive, newScale ->
                 onUpdateSettings(beehive, newScale)
@@ -161,10 +163,11 @@ fun HomeScreen(
 fun SettingsDialog(
     currentBeehive: Beehive?,
     currentScale: Double,
+    beehiveList: List<Beehive>,
     onDismiss: () -> Unit,
     onSave: (Beehive, Double) -> Unit
 ) {
-    var tempBeehive by remember { mutableStateOf(currentBeehive ?: BEEHIVES.first()) }
+    var tempBeehive by remember { mutableStateOf(currentBeehive ?: beehiveList.firstOrNull() ?: Beehive("", "Default")) }
     var tempScaleString by remember { mutableStateOf(currentScale.toString()) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -187,7 +190,7 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 LazyColumn(modifier = Modifier.height(180.dp)) {
-                    items(BEEHIVES) { beehive ->
+                    items(beehiveList) { beehive ->
                         val isSelected = tempBeehive.id == beehive.id
                         Box(
                             modifier = Modifier

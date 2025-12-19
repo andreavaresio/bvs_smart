@@ -30,4 +30,16 @@ interface ApiService {
         @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>,
         @Part file: MultipartBody.Part
     ): Response<ResponseBody>
+
+    @POST
+    suspend fun login(
+        @Url url: String,
+        @Body payload: LoginRequest
+    ): Response<LoginResponse>
+
+    @POST
+    suspend fun getBeehives(
+        @Url url: String,
+        @Query("token") token: String
+    ): Response<List<com.bvs.smart.data.Beehive>>
 }

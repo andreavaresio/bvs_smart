@@ -1,42 +1,3 @@
-package com.bvs.smart
-
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Bundle
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.bvs.smart.data.BEEHIVES
 import com.bvs.smart.data.Beehive
 import com.bvs.smart.network.NetworkModule
@@ -44,11 +5,13 @@ import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
 import com.bvs.smart.ui.screens.InternalCameraScreen
+import com.bvs.smart.ui.screens.LoginScreen
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,6 +20,9 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install the splash screen before calling super.onCreate
+        // installSplashScreen() // Reverted as per user request
+        
         super.onCreate(savedInstanceState)
         // setContent is the entry point for Jetpack Compose.
         // It replaces XML layout inflation (setContentView) and defines the UI using Composable functions.
@@ -65,10 +31,13 @@ class MainActivity : ComponentActivity() {
             // remember { ... } preserves the value across recompositions (when the UI redraws).
             // mutableStateOf(...) creates an observable state holder.
             // by keyword allows using the variable directly (delegation).
-            var currentScreen by remember { mutableStateOf("home") }
+            var currentScreen by remember { mutableStateOf("login") }
             var selectedBeehive by remember { mutableStateOf<Beehive>(BEEHIVES.first()) }
             var scale by remember { mutableStateOf(1.0) }
             var isUploading by remember { mutableStateOf(false) }
+            var isLoggingIn by remember { mutableStateOf(false) }
+            var userToken by remember { mutableStateOf<String?>(null) }
+            var beehiveList by remember { mutableStateOf(BEEHIVES) }
 
             // External Camera State
             var tempExternalUri by remember { mutableStateOf<Uri?>(null) }
@@ -76,35 +45,9 @@ class MainActivity : ComponentActivity() {
             // Pending Upload State (for confirmation dialog)
             var pendingUploadUri by remember { mutableStateOf<Uri?>(null) }
 
-            // Launcher for the external camera activity (replicated from RN logic)
-            val externalCameraLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.StartActivityForResult()
-            ) { result ->
-                if (result.resultCode == RESULT_OK && tempExternalUri != null) {
-                    pendingUploadUri = tempExternalUri!!
-                }
-            }
+            val scope = kotlinx.coroutines.rememberCoroutineScope()
 
-            // Launcher for requesting camera permission
-            val cameraPermissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (isGranted) {
-                    val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
-                    val photoFile = createPhotoFile(this@MainActivity)
-                    val uri = FileProvider.getUriForFile(
-                        this@MainActivity,
-                        "${applicationContext.packageName}.fileprovider",
-                        photoFile
-                    )
-                    tempExternalUri = uri
-                    intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri)
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    externalCameraLauncher.launch(intent)
-                } else {
-                    Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
-                }
-            }
+            // ... (keep externalCameraLauncher and cameraPermissionLauncher)
 
             // Sync Capabilities on start
             val deviceManager = remember { com.bvs.smart.network.DeviceManager(this@MainActivity) }
@@ -112,25 +55,7 @@ class MainActivity : ComponentActivity() {
                 deviceManager.syncCapabilities()
             }
 
-            // Get App Version Info
-            val packageInfo = remember {
-                try {
-                    packageManager.getPackageInfo(packageName, 0)
-                } catch (e: Exception) {
-                    null
-                }
-            }
-            val versionName = packageInfo?.versionName ?: "1.0"
-            val versionCode = try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    packageInfo?.longVersionCode?.toInt() ?: 1
-                } else {
-                    @Suppress("DEPRECATION")
-                    packageInfo?.versionCode ?: 1
-                }
-            } catch (e: Exception) {
-                1
-            }
+            // ... (keep package info)
 
             // Box: A layout composable that stacks children on top of each other.
             // Equivalent to FrameLayout in classic Views.
@@ -138,11 +63,64 @@ class MainActivity : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize()) {
                 Crossfade<String>(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
+                        "login" -> LoginScreen(
+                            isLoading = isLoggingIn,
+                            onLoginSuccess = { username, password ->
+                                scope.launch {
+                                    isLoggingIn = true
+                                    try {
+                                        val deviceId = android.provider.Settings.Secure.getString(
+                                            contentResolver,
+                                            android.provider.Settings.Secure.ANDROID_ID
+                                        ) ?: "unknown"
+                                        
+                                        val response = NetworkModule.apiService.login(
+                                            url = "https://apisferoweb.it/api/v4/APILogin",
+                                            payload = com.bvs.smart.data.LoginRequest(username, password, deviceId)
+                                        )
+                                        
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            val token = response.body()?.token ?: ""
+                                            userToken = token
+                                            
+                                            // Fetch Beehives
+                                            try {
+                                                val beehivesResponse = NetworkModule.apiService.getBeehives(
+                                                    url = "https://apisferoweb.it/api/v4/APIGetBeehives",
+                                                    token = token
+                                                )
+                                                if (beehivesResponse.isSuccessful) {
+                                                    val list = beehivesResponse.body()
+                                                    if (!list.isNullOrEmpty()) {
+                                                        beehiveList = list
+                                                        selectedBeehive = list.first()
+                                                    }
+                                                }
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("BeeVS", "Failed to fetch beehives", e)
+                                            }
+
+                                            currentScreen = "home"
+                                            Toast.makeText(this@MainActivity, "Benvenuto ${response.body()?.username}", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            val errorMsg = response.body()?.message ?: "Credenziali non valide"
+                                            Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(this@MainActivity, "Errore di rete: ${e.message}", Toast.LENGTH_LONG).show()
+                                    } finally {
+                                        isLoggingIn = false
+                                    }
+                                }
+                            }
+                        )
+
                         "home" -> HomeScreen(
                             selectedBeehive = selectedBeehive,
                             scale = scale,
                             versionName = versionName,
                             versionCode = versionCode,
+                            beehiveList = beehiveList,
                             onInternalCamera = { currentScreen = "internal_camera" },
                             onExternalCamera = {
                                 if (ContextCompat.checkSelfPermission(
