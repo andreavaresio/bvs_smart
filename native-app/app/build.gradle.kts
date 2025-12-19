@@ -11,8 +11,8 @@ android {
         applicationId = "com.bvs.smart"
         minSdk = 24 // CameraX requires minSdk 21, but 24 is a safe modern baseline
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.0.5"
+        versionCode = 6
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -56,6 +56,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.animation:animation")
     
     // CameraX
     val cameraxVersion = "1.3.1"

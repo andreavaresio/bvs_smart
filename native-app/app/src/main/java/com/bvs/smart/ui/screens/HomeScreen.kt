@@ -1,5 +1,6 @@
 package com.bvs.smart.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,9 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -33,22 +32,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.bvs.smart.R
 import com.bvs.smart.data.BEEHIVES
 import com.bvs.smart.data.Beehive
-import com.bvs.smart.ui.components.DarkBackground
+import com.bvs.smart.ui.components.AppBackground
+import com.bvs.smart.ui.components.CardBackground
+import com.bvs.smart.ui.components.BorderColor
 import com.bvs.smart.ui.components.PrimaryButton
+import com.bvs.smart.ui.components.TextPrimary
+import com.bvs.smart.ui.components.TextSecondary
+import com.bvs.smart.ui.components.YellowLight
 import com.bvs.smart.ui.components.YellowPrimary
 
 @Composable
 fun HomeScreen(
-    // Parameters in Composable functions act as "Props" (properties).
-    // They pass data down from parents to children.
-    // Callbacks (lambdas like () -> Unit) allow children to communicate back up to parents (events).
     selectedBeehive: Beehive?,
     scale: Double,
     versionName: String,
@@ -58,61 +61,65 @@ fun HomeScreen(
     onGallery: () -> Unit,
     onUpdateSettings: (Beehive, Double) -> Unit
 ) {
-    // Local state for this screen
     var showSettings by remember { mutableStateOf(false) }
 
-    // Box: Used here as the root container to hold the background and stack elements (like the version text at the bottom).
     Box(
         modifier = Modifier
-            .fillMaxSize() // Fills the available width and height
-            .background(DarkBackground)
-            .padding(24.dp) // Adds internal spacing
+            .fillMaxSize()
+            .background(AppBackground)
+            .padding(24.dp)
     ) {
-        // Column: Arranges children vertically (like a vertical LinearLayout).
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
-            Text(text = "🐝", fontSize = 96.sp, color = Color.White.copy(alpha = 0.4f))
-            Spacer(modifier = Modifier.height(12.dp)) // Spacer adds empty space between elements
+            // Replaced Bee emoji with text logo or image if available, or kept emoji with better styling
+            Text(text = "🐝", fontSize = 80.sp) 
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "BeeVS Mobile",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
             
             // Status Card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF2E291B), shape = RoundedCornerShape(16.dp)) // rgba(255, 213, 79, 0.14)
-                    .border(1.dp, YellowPrimary, RoundedCornerShape(16.dp))
-                    .clickable { showSettings = true } // Makes this Box interactive. Clicking sets state to true.
-                    .padding(vertical = 16.dp, horizontal = 20.dp)
+                    .background(CardBackground, shape = RoundedCornerShape(16.dp))
+                    .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
+                    .clickable { showSettings = true }
+                    .padding(vertical = 20.dp, horizontal = 24.dp)
             ) {
                 Column {
-                    // Row: Arranges children horizontally (like a horizontal LinearLayout).
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Beehive", color = YellowPrimary, fontWeight = FontWeight.SemiBold)
-                        Text(selectedBeehive?.label ?: "Not set", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Beehive", color = TextSecondary, fontWeight = FontWeight.Medium)
+                        Text(selectedBeehive?.label ?: "Select", color = TextPrimary, fontWeight = FontWeight.Bold)
                     }
                     Spacer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(YellowPrimary.copy(alpha = 0.35f))
-                            .padding(vertical = 12.dp)
+                            .background(BorderColor)
+                            .padding(vertical = 16.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Scale", color = YellowPrimary, fontWeight = FontWeight.SemiBold)
-                        Text(String.format("%.2f", scale), color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Scale", color = TextSecondary, fontWeight = FontWeight.Medium)
+                        Text(String.format("%.2f", scale), color = TextPrimary, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Buttons
             PrimaryButton(text = "In-app camera", onClick = onInternalCamera)
@@ -124,15 +131,12 @@ fun HomeScreen(
         
         Text(
             text = "Version $versionName ($versionCode)",
-            color = Color.White.copy(alpha = 0.4f),
+            color = TextSecondary.copy(alpha = 0.6f),
             modifier = Modifier.align(Alignment.BottomCenter),
             fontSize = 12.sp
         )
     }
 
-    // Conditionally show the dialog based on state.
-    // In Compose, you don't "show()" or "hide()" views manually.
-    // You simply include them in the composition if a condition is met.
     if (showSettings) {
         SettingsDialog(
             currentBeehive = selectedBeehive,
@@ -154,33 +158,29 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     onSave: (Beehive, Double) -> Unit
 ) {
-    // Temporary state for the dialog.
-    // We don't update the main app state until "Save" is clicked.
     var tempBeehive by remember { mutableStateOf(currentBeehive ?: BEEHIVES.first()) }
     var tempScaleString by remember { mutableStateOf(currentScale.toString()) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF1A1A1A),
+            shape = RoundedCornerShape(16.dp),
+            color = CardBackground,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    text = "Beehive Settings",
-                    color = Color.White,
+                    text = "Settings",
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                Text("Beehive", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Beehive", color = TextSecondary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // LazyColumn: An efficient list that only renders visible items (like RecyclerView).
-                // It's essential for long lists.
-                LazyColumn(modifier = Modifier.height(200.dp)) {
+                LazyColumn(modifier = Modifier.height(180.dp)) {
                     items(BEEHIVES) { beehive ->
                         val isSelected = tempBeehive.id == beehive.id
                         Box(
@@ -188,46 +188,50 @@ fun SettingsDialog(
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
                                 .background(
-                                    if (isSelected) YellowPrimary.copy(alpha = 0.2f) else Color(0xFF2A2A2A),
+                                    if (isSelected) YellowLight else Color.Transparent,
                                     RoundedCornerShape(8.dp)
                                 )
                                 .border(
-                                    width = if (isSelected) 1.dp else 0.dp,
-                                    color = if (isSelected) YellowPrimary else Color.Transparent,
+                                    width = 1.dp,
+                                    color = if (isSelected) YellowPrimary else BorderColor,
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable { tempBeehive = beehive }
                                 .padding(12.dp)
                         ) {
-                            Text(beehive.label, color = Color.White)
+                            Text(
+                                beehive.label, 
+                                color = if (isSelected) Color(0xFFF57F17) else TextPrimary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Scale", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Scale", color = TextSecondary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = tempScaleString,
                     onValueChange = { tempScaleString = it },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedContainerColor = Color(0xFF1F1F1F),
-                        unfocusedContainerColor = Color(0xFF1F1F1F),
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
                         focusedBorderColor = YellowPrimary,
-                        unfocusedBorderColor = Color(0xFF3A3A3A)
+                        unfocusedBorderColor = BorderColor
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel", color = Color.White)
+                        Text("Cancel", color = TextSecondary)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     TextButton(
@@ -239,7 +243,7 @@ fun SettingsDialog(
                             .weight(1f)
                             .background(YellowPrimary, RoundedCornerShape(8.dp))
                     ) {
-                        Text("Save", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("Save", color = TextPrimary, fontWeight = FontWeight.Bold)
                     }
                 }
             }

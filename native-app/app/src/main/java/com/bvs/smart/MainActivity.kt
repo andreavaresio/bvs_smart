@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -43,6 +44,7 @@ import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
 import com.bvs.smart.ui.screens.InternalCameraScreen
+import com.bvs.smart.ui.screens.SplashScreen
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -64,8 +66,8 @@ class MainActivity : ComponentActivity() {
             // remember { ... } preserves the value across recompositions (when the UI redraws).
             // mutableStateOf(...) creates an observable state holder.
             // by keyword allows using the variable directly (delegation).
-            var currentScreen by remember { mutableStateOf("home") }
-            var selectedBeehive by remember { mutableStateOf(BEEHIVES.first()) }
+            var currentScreen by remember { mutableStateOf("splash") }
+            var selectedBeehive by remember { mutableStateOf<Beehive>(BEEHIVES.first()) }
             var scale by remember { mutableStateOf(1.0) }
             var isUploading by remember { mutableStateOf(false) }
 
@@ -135,61 +137,62 @@ class MainActivity : ComponentActivity() {
             // Equivalent to FrameLayout in classic Views.
             // Modifier.fillMaxSize() makes it take up the entire screen.
             Box(modifier = Modifier.fillMaxSize()) {
-                // Simple State-based Navigation:
-                // We simply switch which Composable function is shown based on the 'currentScreen' string.
-                when (currentScreen) {
-                    "home" -> HomeScreen(
-                        selectedBeehive = selectedBeehive,
-                        scale = scale,
-                        versionName = versionName,
-                        versionCode = versionCode,
-                        onInternalCamera = { currentScreen = "internal_camera" },
-                        onExternalCamera = {
-                            if (ContextCompat.checkSelfPermission(
-                                    this@MainActivity,
-                                    android.Manifest.permission.CAMERA
-                                ) == PackageManager.PERMISSION_GRANTED
-                            ) {
-                                val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
-                                val photoFile = createPhotoFile(this@MainActivity)
-                                val uri = FileProvider.getUriForFile(
-                                    this@MainActivity,
-                                    "${applicationContext.packageName}.fileprovider",
-                                    photoFile
-                                )
-                                tempExternalUri = uri
-                                intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri)
-                                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                externalCameraLauncher.launch(intent)
-                            } else {
-                                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                Crossfade<String>(targetState = currentScreen, label = "screen_transition") { screen ->
+                    when (screen) {
+                        "splash" -> SplashScreen(onSplashFinished = { currentScreen = "home" })
+                        "home" -> HomeScreen(
+                            selectedBeehive = selectedBeehive,
+                            scale = scale,
+                            versionName = versionName,
+                            versionCode = versionCode,
+                            onInternalCamera = { currentScreen = "internal_camera" },
+                            onExternalCamera = {
+                                if (ContextCompat.checkSelfPermission(
+                                        this@MainActivity,
+                                        android.Manifest.permission.CAMERA
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+                                    val photoFile = createPhotoFile(this@MainActivity)
+                                    val uri = FileProvider.getUriForFile(
+                                        this@MainActivity,
+                                        "${applicationContext.packageName}.fileprovider",
+                                        photoFile
+                                    )
+                                    tempExternalUri = uri
+                                    intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri)
+                                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    externalCameraLauncher.launch(intent)
+                                } else {
+                                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                                }
+                            },
+                            onGallery = { currentScreen = "gallery" },
+                            onUpdateSettings = { newBeehive: Beehive, newScale: Double ->
+                                selectedBeehive = newBeehive
+                                scale = newScale
                             }
-                        },
-                        onGallery = { currentScreen = "gallery" },
-                        onUpdateSettings = { newBeehive, newScale ->
-                            selectedBeehive = newBeehive
-                            scale = newScale
-                        }
-                    )
+                        )
 
-                    "internal_camera" -> InternalCameraScreen(
-                        beehiveLabel = selectedBeehive.label,
-                        scale = scale,
-                        onPhotoCaptured = { uri, _, _ ->
-                            // Instead of uploading, we set the pending URI and go back to home
-                            pendingUploadUri = uri
-                            currentScreen = "home"
-                        },
-                        onBack = { currentScreen = "home" }
-                    )
+                        "internal_camera" -> InternalCameraScreen(
+                            beehiveLabel = selectedBeehive.label,
+                            scale = scale,
+                            onPhotoCaptured = { uri, _, _ ->
+                                // Instead of uploading, we set the pending URI and go back to home
+                                pendingUploadUri = uri
+                                currentScreen = "home"
+                            },
+                            onBack = { currentScreen = "home" }
+                        )
 
-                    "gallery" -> GalleryScreen(
-                        onPhotoSelected = { uri ->
-                            currentScreen = "home"
-                            pendingUploadUri = uri
-                        },
-                        onBack = { currentScreen = "home" }
-                    )
+                        "gallery" -> GalleryScreen(
+                            onPhotoSelected = { uri ->
+                                currentScreen = "home"
+                                pendingUploadUri = uri
+                            },
+                            onBack = { currentScreen = "home" }
+                        )
+                    }
                 }
 
                 // Confirmation Dialog

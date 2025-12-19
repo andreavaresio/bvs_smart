@@ -34,11 +34,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.bvs.smart.ui.components.AppBackground
 import com.bvs.smart.ui.components.BeehiveBadge
-import com.bvs.smart.ui.components.DarkBackground
 import com.bvs.smart.ui.components.PrimaryButton
 import com.bvs.smart.ui.components.SecondaryButton
-import com.bvs.smart.ui.components.YellowPrimary
+import com.bvs.smart.ui.components.TextPrimary
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -75,11 +75,11 @@ fun InternalCameraScreen(
             cameraPermissionState.launchPermissionRequest()
         }
         Box(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier.fillMaxSize().background(AppBackground).padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Camera permission is required", color = Color.White)
+                Text(text = "Camera permission is required", color = TextPrimary)
                 Spacer(modifier = Modifier.height(16.dp))
                 SecondaryButton(text = "Request Permission", onClick = { cameraPermissionState.launchPermissionRequest() })
             }
@@ -133,7 +133,7 @@ fun CameraContent(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(DarkBackground)) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         // AndroidView now just displays the pre-created view
         AndroidView(
             factory = { 
@@ -156,7 +156,7 @@ fun CameraContent(
                 BeehiveBadge(label = beehiveLabel)
                 Spacer(modifier = Modifier.height(8.dp))
             }
-            Text(text = "Scale: $scale", color = Color.White, fontSize = 12.sp)
+            Text(text = "Scale: $scale", color = Color.White, fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
             Spacer(modifier = Modifier.height(24.dp))
             
             PrimaryButton(

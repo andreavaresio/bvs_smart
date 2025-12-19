@@ -19,7 +19,7 @@ if [ $? -eq 0 ]; then
     VERSION_NAME=$(grep "versionName =" "$GRADLE_FILE" | cut -d'"' -f2)
     VERSION_CODE=$(grep "versionCode =" "$GRADLE_FILE" | awk '{print $3}')
     
-    NEW_APK_NAME="v${VERSION_NAME}(${VERSION_CODE}).apk"
+    NEW_APK_NAME="v${VERSION_NAME}.apk"
     NEW_APK_PATH="$APK_DIR/$NEW_APK_NAME"
 
     if [ -f "$ORIGINAL_APK" ]; then

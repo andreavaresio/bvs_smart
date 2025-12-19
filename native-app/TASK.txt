@@ -8,10 +8,10 @@ Descrizione: Aggiornamento dell'identità visiva e dell'esperienza utente per
 
 STORIA 2.1: REBRANDING
 ----------------------
-[ ] Implementare Splash Screen all'avvio dell'app (Logo su sfondo brand)
-[ ] Aggiornare icona dell'app (Logo)
-[ ] Aggiornare nome/label dell'applicazione (Manifest e strings.xml)
-[ ] Uniformare i colori dell'interfaccia con la nuova palette brand
+[X] Implementare Splash Screen all'avvio dell'app (Logo su sfondo brand)
+[X] Aggiornare icona dell'app (Logo)
+[X] Aggiornare nome/label dell'applicazione (Manifest e strings.xml)
+[X] Uniformare i colori dell'interfaccia con la nuova palette brand
 
 
 EPIC 3: BACKEND & DATA SYNC

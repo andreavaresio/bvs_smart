@@ -19,35 +19,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Defining constants for consistent styling across the app
-val YellowPrimary = Color(0xFFFFD54F)
-val DarkBackground = Color(0xFF000000)
-val DarkCard = Color(0xFF1C1C1C)
-
-// Reusable Components:
-// Instead of rewriting the same Button code multiple times, we create a custom Composable.
-// This ensures consistency and makes changes easier (change once, update everywhere).
+// Brand Colors - Clear & Luminous Theme
+val YellowPrimary = Color(0xFFFFD54F) // Warm professional yellow
+val YellowLight = Color(0xFFFFF8E1)   // Very light yellow for backgrounds
+val AppBackground = Color(0xFFFAFAFA) // Almost white, clean background
+val TextPrimary = Color(0xFF1A1A1A)   // Almost black for strong readability
+val TextSecondary = Color(0xFF616161) // Dark gray for secondary info
+val CardBackground = Color(0xFFFFFFFF) // White cards
+val BorderColor = Color(0xFFE0E0E0)   // Light gray borders
 
 @Composable
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier // Allow passing a modifier to customize from the outside
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary),
-        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = YellowPrimary,
+            contentColor = TextPrimary
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
         modifier = modifier
-            .width(240.dp)
-            .height(72.dp)
+            .width(260.dp)
+            .height(56.dp)
     ) {
-        // The content of the button (what's inside it)
         Text(
             text = text,
-            color = Color.Black,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp
         )
     }
 }
@@ -60,15 +63,18 @@ fun SecondaryButton(
 ) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0x1AFFFFFF)), // rgba(255,255,255,0.1)
-        shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White,
+            contentColor = TextPrimary
+        ),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
         modifier = modifier
     ) {
         Text(
             text = text,
-            color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold
         )
@@ -79,13 +85,13 @@ fun SecondaryButton(
 fun BeehiveBadge(label: String) {
     Box(
         modifier = Modifier
-            .background(Color(0x80000000), shape = RoundedCornerShape(12.dp))
-            .border(1.dp, YellowPrimary, RoundedCornerShape(12.dp))
+            .background(YellowLight, shape = RoundedCornerShape(8.dp))
+            .border(1.dp, YellowPrimary.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
             text = "Beehive: $label",
-            color = YellowPrimary,
+            color = Color(0xFFF57F17), // Darker yellow/orange for text contrast
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )

@@ -33,8 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.bvs.smart.ui.components.DarkBackground
+import com.bvs.smart.ui.components.AppBackground
+import com.bvs.smart.ui.components.BorderColor
 import com.bvs.smart.ui.components.SecondaryButton
+import com.bvs.smart.ui.components.TextPrimary
 import com.bvs.smart.ui.components.YellowPrimary
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -68,7 +70,7 @@ fun GalleryScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Gallery permission is required", color = Color.White)
+                Text(text = "Gallery permission is required", color = TextPrimary)
                 SecondaryButton(text = "Request Permission", onClick = { permissionState.launchPermissionRequest() })
                 SecondaryButton(text = "Back", onClick = onBack)
             }
@@ -125,7 +127,7 @@ fun GalleryContent(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(DarkBackground)) {
+    Column(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         // Header
         Box(
             modifier = Modifier
@@ -137,8 +139,9 @@ fun GalleryContent(
             SecondaryButton(text = "Back", onClick = onBack)
             Text(
                 text = "Gallery",
-                color = Color.White,
+                color = TextPrimary,
                 fontSize = 20.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
