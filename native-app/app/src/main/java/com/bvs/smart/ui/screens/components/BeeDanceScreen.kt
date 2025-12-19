@@ -202,15 +202,6 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                     textAlign = TextAlign.Center
                 )
             }
-
-            Text(
-                text = "Tocca un'ape per aggiungerne un'altra.\nTocca fuori per tornare alla login",
-                color = TextSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-            )
         }
     }
 }
