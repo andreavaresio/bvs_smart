@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,6 +46,7 @@ import com.bvs.smart.ui.components.AppBackground
 import com.bvs.smart.ui.components.BorderColor
 import com.bvs.smart.ui.components.CardBackground
 import com.bvs.smart.ui.components.PrimaryButton
+import com.bvs.smart.ui.components.SecondaryButton
 import com.bvs.smart.ui.components.TextPrimary
 import com.bvs.smart.ui.components.TextSecondary
 import com.bvs.smart.ui.components.YellowLight
@@ -59,11 +61,13 @@ fun HomeScreen(
     scale: Double,
     versionName: String,
     versionCode: Int,
+    loggedUsername: String,
     apiaryList: List<Apiary>,
     hiveList: List<Arnia>,
     onInternalCamera: () -> Unit,
     onExternalCamera: () -> Unit,
     onGallery: () -> Unit,
+    onLogout: () -> Unit,
     onApiarySelected: (Apiary) -> Unit,
     onArniaSelected: (Arnia) -> Unit,
     onScaleUpdated: (Double) -> Unit
@@ -78,23 +82,38 @@ fun HomeScreen(
             .padding(24.dp)
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
             modifier = Modifier.fillMaxSize()
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.splash_logo),
-                contentDescription = "BeeVS Logo",
-                modifier = Modifier
-                    .height(120.dp)
-                    .width(120.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "BeeVS Mobile",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(1f, fill = true)
+                ) {
+                    Text(
+                        text = "BeeVS Mobile",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    val displayName = loggedUsername.ifBlank { "Utente non identificato" }
+                    Text(
+                        text = "Utente: $displayName",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.splash_logo),
+                    contentDescription = "BeeVS Logo",
+                    modifier = Modifier.size(56.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
 
             Column(
@@ -217,15 +236,45 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(text = "In-app camera", onClick = onInternalCamera)
-            Spacer(modifier = Modifier.height(16.dp))
-            PrimaryButton(text = "Device-camera", onClick = onExternalCamera)
-            Spacer(modifier = Modifier.height(16.dp))
-            PrimaryButton(text = "Gallery", onClick = onGallery)
-
             Spacer(modifier = Modifier.weight(1f, fill = true))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CardBackground, RoundedCornerShape(16.dp))
+                    .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
+                    .padding(vertical = 12.dp, horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                PrimaryButton(
+                    text = "In-app camera",
+                    onClick = onInternalCamera,
+                    modifier = Modifier.weight(1f),
+                    fixedWidth = false
+                )
+                PrimaryButton(
+                    text = "Device-camera",
+                    onClick = onExternalCamera,
+                    modifier = Modifier.weight(1f),
+                    fixedWidth = false
+                )
+                PrimaryButton(
+                    text = "Gallery",
+                    onClick = onGallery,
+                    modifier = Modifier.weight(1f),
+                    fixedWidth = false
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SecondaryButton(
+                text = "Logout",
+                onClick = onLogout,
+                modifier = Modifier
+                    .align(Alignment.End)
+            )
 
             Text(
                 text = "Version $versionName ($versionCode)",

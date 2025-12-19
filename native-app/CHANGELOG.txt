@@ -20,6 +20,7 @@ SPRINT: LOGIN & AUTHENTICATION (COMPLETATA)
 - Recupero Anagrafica Arnie dinamica tramite API Server.
 - Mostrata la versione dell'app anche nella schermata di login.
 - Investigata la limitazione della camera di sistema a 12.5MP (Pixel Binning).
+- Sistemata la richiesta parametri camera nella build 1.0.8.
 
 VERSION 1.0.4 (19 DICEMBRE 2025)
 =================================

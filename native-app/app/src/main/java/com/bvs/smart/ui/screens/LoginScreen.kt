@@ -1,8 +1,12 @@
 package com.bvs.smart.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -13,9 +17,12 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,10 +31,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntOffset
 import com.bvs.smart.R
 import com.bvs.smart.ui.components.*
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.random.Random
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String, String, String) -> Unit,
@@ -43,6 +58,12 @@ fun LoginScreen(
     var password by rememberSaveable(initialPassword) { mutableStateOf(initialPassword) }
     var scanner by rememberSaveable(initialScanner) { mutableStateOf(initialScanner) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showBeeDance by remember { mutableStateOf(false) }
+
+    if (showBeeDance) {
+        BeeDanceScreen(onExit = { showBeeDance = false })
+        return
+    }
 
     Box(
         modifier = Modifier
@@ -59,7 +80,8 @@ fun LoginScreen(
             Image(
                 painter = painterResource(id = R.drawable.splash_logo),
                 contentDescription = "BeeVS Logo",
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier
+                    .size(150.dp)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -162,14 +184,117 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading
             )
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "Version $versionName ($versionCode)",
+            color = TextSecondary.copy(alpha = 0.6f),
+            fontSize = 12.sp,
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = { showBeeDance = true }
+                )
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
+    }
+}
 
-            Text(
-                text = "Version $versionName ($versionCode)",
-                color = TextSecondary.copy(alpha = 0.6f),
-                fontSize = 12.sp
+@Composable
+private fun BeeDanceScreen(onExit: () -> Unit) {
+    val beeSize = 64.dp
+    val density = LocalDensity.current
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppBackground)
+            .clickable { onExit() }
+    ) {
+        val maxWidthPx = with(density) { constraints.maxWidth.toFloat() }
+        val maxHeightPx = with(density) { constraints.maxHeight.toFloat() }
+        val beeSizePx = with(density) { beeSize.toPx() }
+        val speedPx = with(density) { 180.dp.toPx() }
+        val minSpeed = speedPx * 0.4f
+
+        fun randomVelocity(): Offset {
+            val angle = Random.nextDouble(0.0, PI * 2)
+            return Offset(
+                x = (cos(angle) * speedPx).toFloat(),
+                y = (sin(angle) * speedPx).toFloat()
             )
         }
+
+        var position by remember {
+            mutableStateOf(
+                Offset(
+                    x = maxWidthPx / 2f - beeSizePx / 2f,
+                    y = maxHeightPx / 2f - beeSizePx / 2f
+                )
+            )
+        }
+
+        var velocity by remember { mutableStateOf(randomVelocity()) }
+
+        LaunchedEffect(maxWidthPx, maxHeightPx) {
+            if (maxWidthPx == 0f || maxHeightPx == 0f) return@LaunchedEffect
+            var lastTime = 0L
+            while (true) {
+                withFrameNanos { frameTime ->
+                    if (lastTime == 0L) {
+                        lastTime = frameTime
+                        return@withFrameNanos
+                    }
+                    val deltaSeconds = (frameTime - lastTime) / 1_000_000_000f
+                    lastTime = frameTime
+
+                    var newPos = Offset(
+                        x = position.x + velocity.x * deltaSeconds,
+                        y = position.y + velocity.y * deltaSeconds
+                    )
+                    var newVel = velocity
+
+                    if (newPos.x <= 0f) {
+                        newPos = newPos.copy(x = 0f)
+                        val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                        newVel = newVel.copy(x = bounce)
+                    } else if (newPos.x >= maxWidthPx - beeSizePx) {
+                        newPos = newPos.copy(x = maxWidthPx - beeSizePx)
+                        val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                        newVel = newVel.copy(x = -bounce)
+                    }
+
+                    if (newPos.y <= 0f) {
+                        newPos = newPos.copy(y = 0f)
+                        val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                        newVel = newVel.copy(y = bounce)
+                    } else if (newPos.y >= maxHeightPx - beeSizePx) {
+                        newPos = newPos.copy(y = maxHeightPx - beeSizePx)
+                        val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
+                        newVel = newVel.copy(y = -bounce)
+                    }
+
+                    position = newPos
+                    velocity = newVel
+                }
+            }
+        }
+
+        Text(
+            text = "🐝",
+            fontSize = 48.sp,
+            modifier = Modifier.offset {
+                IntOffset(position.x.roundToInt(), position.y.roundToInt())
+            }
+        )
+
+        Text(
+            text = "Tocca lo schermo per tornare alla login",
+            color = TextSecondary,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 32.dp)
+        )
     }
 }

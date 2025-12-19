@@ -11,6 +11,9 @@ Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
 [ ] Verificare il flusso di login automatico se le credenziali sono presenti
 [ ] log di tutte le chiamate di rete
 [X] Mostrare la versione dell'app anche nella schermata di login
+[ ] tasto per condividere il log file
+[ ] salvare in qualche modo il log file
+[ ] serve tracciare chi prova l'app e a quale versione?
 
 EPIC 3: BACKEND & DATA SYNC
 ===========================
@@ -27,15 +30,8 @@ EPIC 4: QUALITY ASSURANCE & MAINTENANCE
 =======================================
 Descrizione: Attività di test, fix di bug segnalati e manutenzione del codice.
 
-STORIA 4.1: FEEDBACK UTENTE
----------------------------
-[ ] VERIFICARE E SISTEMARE: Installando la versione 1.0.8 non vengono richiesti
-    i parametri della fotocamera.
 
-STORIA 4.2: TESTING
--------------------
-[ ] Aggiungere unit test per i layer di rete e dati
-[ ] Eseguire test UI per i flussi principali
+
 
 
 APPENDICE: STRUMENTI DI SVILUPPO

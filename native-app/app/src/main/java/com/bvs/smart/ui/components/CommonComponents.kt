@@ -33,8 +33,12 @@ fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    fixedWidth: Boolean = true
 ) {
+    val baseModifier = modifier.height(56.dp)
+    val finalModifier = if (fixedWidth) baseModifier.width(260.dp) else baseModifier
+
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -44,9 +48,7 @@ fun PrimaryButton(
         ),
         shape = RoundedCornerShape(12.dp),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-        modifier = modifier
-            .width(260.dp)
-            .height(56.dp)
+        modifier = finalModifier
     ) {
         Text(
             text = text,

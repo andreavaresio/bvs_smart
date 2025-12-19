@@ -263,6 +263,7 @@ class MainActivity : ComponentActivity() {
                             scale = scale,
                             versionName = versionName,
                             versionCode = versionCode,
+                            loggedUsername = savedUsername,
                             apiaryList = apiaryList,
                             hiveList = hiveList,
                             onInternalCamera = { currentScreen = MainScreen.INTERNAL_CAMERA },
@@ -278,6 +279,21 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onGallery = { currentScreen = MainScreen.GALLERY },
+                            onLogout = {
+                                authManager.logout()
+                                apiaryList = emptyList()
+                                hiveList = emptyList()
+                                selectedApiary = null
+                                selectedHive = null
+                                scale = 1.0
+                                isLoggingIn = false
+                                isUploading = false
+                                loginError = null
+                                // preserve last username so login form stays prefilled
+                                savedPassword = ""
+                                savedScanner = DEFAULT_SCANNER
+                                currentScreen = MainScreen.LOGIN
+                            },
                             onApiarySelected = { apiary ->
                                 selectedApiary = apiary
                                 hiveList = apiary.hives
