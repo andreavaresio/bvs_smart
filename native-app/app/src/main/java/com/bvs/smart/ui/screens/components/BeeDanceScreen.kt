@@ -38,6 +38,7 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 private const val COUNTER_BOX_SIZE_DP = 120
+private val CounterOverlay = Color(0x66FFFFFF)
 
 @Composable
 fun BeeDanceScreen(onExit: () -> Unit) {
@@ -142,7 +143,7 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                         }
 
                         if (bounced) {
-                            actionSound.play(MediaActionSound.SHUTTER_CLICK)
+                            actionSound.play(MediaActionSound.FOCUS_COMPLETE)
                         }
                     }
                 }
@@ -168,29 +169,19 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                                 )
                             )
                             bees.add(Bee(startPos, randomVelocity()))
-                            actionSound.play(MediaActionSound.FOCUS_COMPLETE)
+                            actionSound.play(MediaActionSound.SHUTTER_CLICK)
                         } else {
                             onExit()
                         }
                     }
                 }
         ) {
-            bees.forEach { bee ->
-                Text(
-                    text = "🐝",
-                    fontSize = 48.sp,
-                    modifier = Modifier.offset {
-                        IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
-                    }
-                )
-            }
-
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(COUNTER_BOX_SIZE_DP.dp)
                     .background(
-                        color = Color(0x66FFFFFF),
+                        color = CounterOverlay,
                         shape = RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -200,6 +191,16 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                     color = TextSecondary,
                     fontSize = 28.sp,
                     textAlign = TextAlign.Center
+                )
+            }
+
+            bees.forEach { bee ->
+                Text(
+                    text = "🐝",
+                    fontSize = 48.sp,
+                    modifier = Modifier.offset {
+                        IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
+                    }
                 )
             }
         }
