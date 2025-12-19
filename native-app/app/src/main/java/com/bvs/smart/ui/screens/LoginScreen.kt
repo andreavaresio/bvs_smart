@@ -60,6 +60,12 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var showBeeDance by remember { mutableStateOf(false) }
 
+    LaunchedEffect(initialUsername) {
+        if (initialUsername.isNotBlank()) {
+            username = initialUsername
+        }
+    }
+
     if (showBeeDance) {
         BeeDanceScreen(onExit = { showBeeDance = false })
         return
