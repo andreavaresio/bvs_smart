@@ -1,13 +1,16 @@
 package com.bvs.smart.ui.screens.components
 
+import android.media.MediaActionSound
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -15,7 +18,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +38,16 @@ import kotlin.random.Random
 fun BeeDanceScreen(onExit: () -> Unit) {
     val beeSize = 64.dp
     val density = LocalDensity.current
+
+    val actionSound = remember {
+        MediaActionSound().apply {
+            load(MediaActionSound.FOCUS_COMPLETE)
+            load(MediaActionSound.SHUTTER_CLICK)
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { actionSound.release() }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -93,30 +105,39 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                             y = bee.position.y + bee.velocity.y * deltaSeconds
                         )
                         var newVel = bee.velocity
+                        var bounced = false
 
                         if (newPos.x <= 0f) {
                             newPos = newPos.copy(x = 0f)
                             val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
                             newVel = newVel.copy(x = bounce)
+                            bounced = true
                         } else if (newPos.x >= maxWidthPx - beeSizePx) {
                             newPos = newPos.copy(x = maxWidthPx - beeSizePx)
                             val bounce = max(abs(newVel.x), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
                             newVel = newVel.copy(x = -bounce)
+                            bounced = true
                         }
 
                         if (newPos.y <= 0f) {
                             newPos = newPos.copy(y = 0f)
                             val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
                             newVel = newVel.copy(y = bounce)
+                            bounced = true
                         } else if (newPos.y >= maxHeightPx - beeSizePx) {
                             newPos = newPos.copy(y = maxHeightPx - beeSizePx)
                             val bounce = max(abs(newVel.y), minSpeed) * (0.8f + Random.nextFloat() * 0.4f)
                             newVel = newVel.copy(y = -bounce)
+                            bounced = true
                         }
 
                         val updatedBee = Bee(newPos, newVel)
                         if (index < bees.size) {
                             bees[index] = updatedBee
+                        }
+
+                        if (bounced) {
+                            actionSound.play(MediaActionSound.SHUTTER_CLICK)
                         }
                     }
                 }
@@ -142,6 +163,7 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                                 )
                             )
                             bees.add(Bee(startPos, randomVelocity()))
+                            actionSound.play(MediaActionSound.FOCUS_COMPLETE)
                         } else {
                             onExit()
                         }
