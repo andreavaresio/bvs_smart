@@ -1,6 +1,15 @@
 STORICO DELLE MODIFICHE (CHANGELOG)
 ================================================================================
 
+VERSION 1.0.1 (19 DICEMBRE 2025)
+=================================
+
+FIX & MIGLIORAMENTI:
+- Fix: Risolto crash "SecurityException" su Device-camera (gestione permessi runtime).
+- Fix: Abilitati settings completi (50MP) su Device-camera usando Intent esplicito.
+- UI: Aggiunta visualizzazione dinamica della versione (es. "Version 1.0 (1)") nella Home.
+- UI: Uniformato stile bottoni e aggiunto script di versioning automatico.
+
 VERSIONE 1.0.0 (18 DICEMBRE 2025)
 =================================
 

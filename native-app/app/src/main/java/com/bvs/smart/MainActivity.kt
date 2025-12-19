@@ -1,6 +1,9 @@
 package com.bvs.smart
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -31,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.bvs.smart.data.BEEHIVES
 import com.bvs.smart.data.Beehive
@@ -71,14 +75,33 @@ class MainActivity : ComponentActivity() {
             // Pending Upload State (for confirmation dialog)
             var pendingUploadUri by remember { mutableStateOf<Uri?>(null) }
 
-            // registerForActivityResult is used to launch other activities (like the Camera app)
-            // and handle the result (success/failure/data) in a callback.
+            // Launcher for the external camera activity (replicated from RN logic)
             val externalCameraLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.TakePicture()
-            ) { success ->
-                if (success && tempExternalUri != null) {
-                    // For external camera, we set pending URI to show confirmation
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                if (result.resultCode == RESULT_OK && tempExternalUri != null) {
                     pendingUploadUri = tempExternalUri!!
+                }
+            }
+
+            // Launcher for requesting camera permission
+            val cameraPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (isGranted) {
+                    val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+                    val photoFile = createPhotoFile(this@MainActivity)
+                    val uri = FileProvider.getUriForFile(
+                        this@MainActivity,
+                        "${applicationContext.packageName}.fileprovider",
+                        photoFile
+                    )
+                    tempExternalUri = uri
+                    intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri)
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    externalCameraLauncher.launch(intent)
+                } else {
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -86,6 +109,26 @@ class MainActivity : ComponentActivity() {
             val deviceManager = remember { com.bvs.smart.network.DeviceManager(this@MainActivity) }
             LaunchedEffect(Unit) {
                 deviceManager.syncCapabilities()
+            }
+
+            // Get App Version Info
+            val packageInfo = remember {
+                try {
+                    packageManager.getPackageInfo(packageName, 0)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            val versionName = packageInfo?.versionName ?: "1.0"
+            val versionCode = try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    packageInfo?.longVersionCode?.toInt() ?: 1
+                } else {
+                    @Suppress("DEPRECATION")
+                    packageInfo?.versionCode ?: 1
+                }
+            } catch (e: Exception) {
+                1
             }
 
             // Box: A layout composable that stacks children on top of each other.
@@ -98,16 +141,29 @@ class MainActivity : ComponentActivity() {
                     "home" -> HomeScreen(
                         selectedBeehive = selectedBeehive,
                         scale = scale,
+                        versionName = versionName,
+                        versionCode = versionCode,
                         onInternalCamera = { currentScreen = "internal_camera" },
                         onExternalCamera = {
-                            val photoFile = createPhotoFile(this@MainActivity)
-                            val uri = FileProvider.getUriForFile(
-                                this@MainActivity,
-                                "${applicationContext.packageName}.fileprovider",
-                                photoFile
-                            )
-                            tempExternalUri = uri
-                            externalCameraLauncher.launch(uri)
+                            if (ContextCompat.checkSelfPermission(
+                                    this@MainActivity,
+                                    android.Manifest.permission.CAMERA
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+                                val photoFile = createPhotoFile(this@MainActivity)
+                                val uri = FileProvider.getUriForFile(
+                                    this@MainActivity,
+                                    "${applicationContext.packageName}.fileprovider",
+                                    photoFile
+                                )
+                                tempExternalUri = uri
+                                intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri)
+                                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                externalCameraLauncher.launch(intent)
+                            } else {
+                                cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                            }
                         },
                         onGallery = { currentScreen = "gallery" },
                         onUpdateSettings = { newBeehive, newScale ->

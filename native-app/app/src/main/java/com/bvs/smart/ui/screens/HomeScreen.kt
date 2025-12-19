@@ -51,6 +51,8 @@ fun HomeScreen(
     // Callbacks (lambdas like () -> Unit) allow children to communicate back up to parents (events).
     selectedBeehive: Beehive?,
     scale: Double,
+    versionName: String,
+    versionCode: Int,
     onInternalCamera: () -> Unit,
     onExternalCamera: () -> Unit,
     onGallery: () -> Unit,
@@ -121,7 +123,7 @@ fun HomeScreen(
         }
         
         Text(
-            text = "Version 1.0 (Kotlin)",
+            text = "Version $versionName ($versionCode)",
             color = Color.White.copy(alpha = 0.4f),
             modifier = Modifier.align(Alignment.BottomCenter),
             fontSize = 12.sp
