@@ -11,8 +11,8 @@ android {
         applicationId = "com.bvs.smart"
         minSdk = 24 // CameraX requires minSdk 21, but 24 is a safe modern baseline
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

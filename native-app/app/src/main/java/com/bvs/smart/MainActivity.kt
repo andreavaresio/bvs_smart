@@ -44,7 +44,6 @@ import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
 import com.bvs.smart.ui.screens.InternalCameraScreen
-import com.bvs.smart.ui.screens.SplashScreen
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -66,7 +65,7 @@ class MainActivity : ComponentActivity() {
             // remember { ... } preserves the value across recompositions (when the UI redraws).
             // mutableStateOf(...) creates an observable state holder.
             // by keyword allows using the variable directly (delegation).
-            var currentScreen by remember { mutableStateOf("splash") }
+            var currentScreen by remember { mutableStateOf("home") }
             var selectedBeehive by remember { mutableStateOf<Beehive>(BEEHIVES.first()) }
             var scale by remember { mutableStateOf(1.0) }
             var isUploading by remember { mutableStateOf(false) }
@@ -139,7 +138,6 @@ class MainActivity : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize()) {
                 Crossfade<String>(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
-                        "splash" -> SplashScreen(onSplashFinished = { currentScreen = "home" })
                         "home" -> HomeScreen(
                             selectedBeehive = selectedBeehive,
                             scale = scale,

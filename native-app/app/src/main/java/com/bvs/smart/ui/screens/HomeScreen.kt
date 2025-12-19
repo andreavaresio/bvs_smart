@@ -73,8 +73,14 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
-            // Replaced Bee emoji with text logo or image if available, or kept emoji with better styling
-            Text(text = "🐝", fontSize = 80.sp) 
+            // Official Brand Logo
+            Image(
+                painter = painterResource(id = R.drawable.splash_logo),
+                contentDescription = "BeeVS Logo",
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(120.dp)
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "BeeVS Mobile",
