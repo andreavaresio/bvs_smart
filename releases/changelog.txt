@@ -1,5 +1,0 @@
-v0.0.2
-
- - Aumentati i log
- - Invia le proprietà del device al server --> https://www.meditazionearmoniosa.ovh/beevs-smart/index.php
- - La cartella di rilascio è su Google Drive --> https://drive.google.com/drive/folders/1M3SYvRFoDtuoFap2Xg1q-7VYhxW8sBIZ

@@ -1,0 +1,31 @@
+STORICO DELLE MODIFICHE (CHANGELOG)
+================================================================================
+
+VERSIONE 1.0.0 (18 DICEMBRE 2025)
+=================================
+
+EPIC 1: MIGRAZIONE NATIVA (COMPLETATA)
+--------------------------------------
+Descrizione: Riscrittura completa dell'app da React Native ad Android Nativo
+             utilizzando Kotlin e Jetpack Compose. Risolti i blocchi critici
+             connessi all'operatore TIM.
+
+INFRASTRUTTURA & CORE:
+- Creato scaffolding del progetto con Gradle (Kotlin DSL).
+- Definiti modelli dati core: Beehive, DeviceCapabilities.
+- Implementato layer di rete professionale con Retrofit e OkHttp.
+- Implementata UI moderna con "Dark Mode" e palette brand Giallo/Nero.
+- Creato overlay di caricamento (Loading) con blocco interazioni.
+
+MEDIA & FOTOCAMERA:
+- Implementata "In-app camera" (CameraX) con gestione del ciclo di vita.
+- Implementata "Device-camera" tramite Intent di sistema.
+- Implementata integrazione Galleria con MediaStore e caricamento Coil.
+- Aggiunta conferma d'invio ("Vuoi inviare la foto?") a tutti i flussi.
+
+RAFFINAMENTO TECNICO:
+- Sincronizzazione automatica Device Capabilities all'avvio.
+- Gestione risposte server non-JSON (fix crash parsing stringhe grezze).
+- Ottimizzazione build Gradle (4GB heap, Parallel build).
+- Inseriti commenti didattici nel codice per facilitare lo sviluppo.
+================================================================================

@@ -1,0 +1,50 @@
+LISTA DEI TASK (80 COL)
+================================================================================
+
+EPIC 2: BRAND IDENTITY & UX
+===========================
+Descrizione: Aggiornamento dell'identità visiva e dell'esperienza utente per
+             allinearsi al nuovo brand aziendale.
+
+STORIA 2.1: REBRANDING
+----------------------
+[ ] Implementare Splash Screen all'avvio dell'app (Logo su sfondo brand)
+[ ] Aggiornare icona dell'app (Logo)
+[ ] Aggiornare nome/label dell'applicazione (Manifest e strings.xml)
+[ ] Uniformare i colori dell'interfaccia con la nuova palette brand
+
+
+EPIC 3: BACKEND & DATA SYNC
+===========================
+Descrizione: Integrazione profonda con le API del server per autenticazione,
+             dati dinamici e resilienza.
+
+STORIA 3.1: INTEGRAZIONE API
+----------------------------
+[ ] Implementare Login tramite API Server (autenticazione User/Pass)
+[ ] Recuperare Anagrafica Arnie dinamica tramite API Server
+[ ] Aggiornare l'Upload Foto per usare token di sessione dinamici
+[ ] Implementare modalità offline / logica di riprova per gli upload
+
+
+EPIC 4: QUALITY ASSURANCE & MAINTENANCE
+=======================================
+Descrizione: Attività di test, fix di bug segnalati e manutenzione del codice.
+
+STORIA 4.1: FEEDBACK UTENTE
+---------------------------
+[ ] Risoluzione Foto (Device-camera): Investigare perché non permette di
+    selezionare 50MP (attualmente limita a 12.5MP).
+    Nota: Probabile effetto del Pixel Binning.
+
+STORIA 4.2: TESTING
+-------------------
+[ ] Aggiungere unit test per i layer di rete e dati
+[ ] Eseguire test UI per i flussi principali
+
+
+APPENDICE: STRUMENTI DI SVILUPPO
+--------------------------------
+1. Usa "Live Edit" (Settings > Editor > Live Edit > Push edits automatically)
+2. Usa "Apply Changes" (Icona fulmine) invece di "Run" per modifiche rapide.
+================================================================================
