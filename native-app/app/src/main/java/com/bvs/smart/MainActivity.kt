@@ -263,6 +263,7 @@ class MainActivity : ComponentActivity() {
                             scale = scale,
                             versionName = versionName,
                             versionCode = versionCode,
+                            baseUrl = API_BASE_URL,
                             loggedUsername = savedUsername,
                             apiaryList = apiaryList,
                             hiveList = hiveList,
@@ -452,21 +453,23 @@ class MainActivity : ComponentActivity() {
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.ITALY)
                 val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss.SSS'Z'", Locale.US)
 
+                val textMediaType = "text/plain".toMediaTypeOrNull()
+
                 val params: Map<String, RequestBody> = mapOf(
-                    "username" to username.toRequestBody(MultipartBody.FORM),
-                    "password" to password.toRequestBody(MultipartBody.FORM),
-                    "arniaId" to hive.code.toRequestBody(MultipartBody.FORM),
+                    "username" to username.toRequestBody(textMediaType),
+                    "password" to password.toRequestBody(textMediaType),
+                    "arniaId" to hive.code.toRequestBody(textMediaType),
                     "note" to "Foto scattata il ${SimpleDateFormat("dd MMMM yyyy HH:mm", Locale.ITALY).format(now)}"
-                        .toRequestBody(MultipartBody.FORM),
+                        .toRequestBody(textMediaType),
                     "ScaleforConta" to String.format(Locale.US, "%.2f", scale)
-                        .toRequestBody(MultipartBody.FORM),
+                        .toRequestBody(textMediaType),
                     "timestamp" to timestampFormat.format(now).replace(":", "-")
-                        .toRequestBody(MultipartBody.FORM),
-                    "GPS" to "45.0352891,7.5168128".toRequestBody(MultipartBody.FORM),
-                    "NumeroGGPermanenza" to "0".toRequestBody(MultipartBody.FORM),
-                    "data_prelievo_data" to dateFormat.format(now).toRequestBody(MultipartBody.FORM),
-                    "data_prelievo_time" to timeFormat.format(now).toRequestBody(MultipartBody.FORM),
-                    "tipo_misura" to "CadutaNaturale".toRequestBody(MultipartBody.FORM)
+                        .toRequestBody(textMediaType),
+                    "GPS" to "45.0352891,7.5168128".toRequestBody(textMediaType),
+                    "NumeroGGPermanenza" to "0".toRequestBody(textMediaType),
+                    "data_prelievo_data" to dateFormat.format(now).toRequestBody(textMediaType),
+                    "data_prelievo_time" to timeFormat.format(now).toRequestBody(textMediaType),
+                    "tipo_misura" to "CadutaNaturale".toRequestBody(textMediaType)
                 )
 
                 val response = apiRepository.uploadFoto(params, body)

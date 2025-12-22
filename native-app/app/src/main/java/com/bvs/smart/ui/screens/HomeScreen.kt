@@ -61,6 +61,7 @@ fun HomeScreen(
     scale: Double,
     versionName: String,
     versionCode: Int,
+    baseUrl: String,
     loggedUsername: String,
     apiaryList: List<Apiary>,
     hiveList: List<Arnia>,
@@ -125,7 +126,7 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Alveari",
+                    text = "Apiari",
                     color = TextSecondary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -136,14 +137,14 @@ fun HomeScreen(
                     onExpandedChange = { apiaryMenuExpanded = !apiaryMenuExpanded }
                 ) {
                     OutlinedTextField(
-                        value = selectedApiary?.name ?: "Seleziona un alveare",
+                        value = selectedApiary?.name ?: "Seleziona un apiario",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = apiaryMenuExpanded) },
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth(),
-                        label = { Text("Alveare") },
+                        label = { Text("Apiario") },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                     )
 
@@ -171,7 +172,7 @@ fun HomeScreen(
                 )
                 if (hiveList.isEmpty()) {
                     Text(
-                        text = "Nessuna arnia disponibile per l'alveare selezionato.",
+                        text = "Nessuna arnia disponibile per l'apiario selezionato.",
                         color = TextSecondary
                     )
                 } else {
@@ -274,6 +275,12 @@ fun HomeScreen(
                 onClick = onLogout,
                 modifier = Modifier
                     .align(Alignment.End)
+            )
+
+            Text(
+                text = baseUrl,
+                color = TextSecondary.copy(alpha = 0.6f),
+                fontSize = 12.sp
             )
 
             Text(
