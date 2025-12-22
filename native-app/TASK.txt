@@ -9,9 +9,9 @@ Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
 [X] Recuperare le SPECIFICHE UFFICIALI delle API di Login (campi e risposte)
 [ ] Testare il flusso di accesso con TUTTI GLI UTENTI e i vari RUOLI
 [ ] Verificare il flusso di login automatico se le credenziali sono presenti
-[ ] log di tutte le chiamate di rete
-[ ] tasto per condividere il log file
-[ ] salvare in qualche modo il log file
+[X] log di tutte le chiamate di rete
+[X] tasto per condividere il log file
+[X] salvare in qualche modo il log file
 [ ] serve tracciare chi prova l'app e a quale versione?
 
 EPIC 3: BACKEND & DATA SYNC
@@ -21,7 +21,6 @@ Descrizione: Integrazione profonda con le API del server per autenticazione,
 
 STORIA 3.1: INTEGRAZIONE API & SESSIONE
 ---------------------------------------
-[ ] Ottimizzazione ApiRepository per gestione errori centralizzata
 [ ] Implementare modalità offline / logica di riprova per gli upload
 
 

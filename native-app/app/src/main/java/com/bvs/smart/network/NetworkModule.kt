@@ -1,6 +1,8 @@
 package com.bvs.smart.network
 
+import com.bvs.smart.utils.LogManager
 import com.google.gson.GsonBuilder
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -22,6 +24,21 @@ object NetworkModule {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    private val fileLoggingInterceptor = Interceptor { chain ->
+        val request = chain.request()
+        LogManager.i("Network", "--> ${request.method} ${request.url}")
+        
+        val response = try {
+            chain.proceed(request)
+        } catch (e: Exception) {
+            LogManager.e("Network", "<-- FAILED: ${e.message}")
+            throw e
+        }
+
+        LogManager.i("Network", "<-- ${response.code} ${response.message} (${request.url})")
+        response
+    }
+
     private val trustAllTrustManager = object : X509TrustManager {
         override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
         override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
@@ -35,6 +52,7 @@ object NetworkModule {
     // WARNING: This client trusts every certificate and hostname. Use only in controlled environments.
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+        .addInterceptor(fileLoggingInterceptor)
         .sslSocketFactory(trustAllSslSocketFactory, trustAllTrustManager)
         .hostnameVerifier { _, _ -> true }
         .connectTimeout(60, TimeUnit.SECONDS)

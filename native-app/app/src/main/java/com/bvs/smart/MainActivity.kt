@@ -14,6 +14,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,10 +45,10 @@ import com.bvs.smart.data.Arnia
 import com.bvs.smart.network.ApiRepository
 import com.bvs.smart.network.AuthManager
 import com.bvs.smart.network.DeviceManager
+import com.bvs.smart.utils.LogManager
 import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
-import com.bvs.smart.ui.screens.InternalCameraScreen
 import com.bvs.smart.ui.screens.LoginScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +70,6 @@ private const val DEFAULT_SCANNER = "SCANNER_DEMO_1"
 private enum class MainScreen {
     LOGIN,
     HOME,
-    INTERNAL_CAMERA,
     GALLERY
 }
 
@@ -81,6 +81,27 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Logger
+        LogManager.init(this)
+        LogManager.i("App", "App Started - Version: ${packageManager.getPackageInfo(packageName, 0).versionName}")
+
+        // Log Device Capabilities
+        lifecycleScope.launch {
+            try {
+                val caps = deviceManager.getDeviceCapabilities()
+                LogManager.i("DeviceCaps", "Capabilities: $caps")
+            } catch (e: Exception) {
+                LogManager.e("DeviceCaps", "Failed to get capabilities", e)
+            }
+        }
+
+        // Global Crash Handler
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            LogManager.e("Crash", "Uncaught Exception on thread ${thread.name}", throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
 
         setContent {
             val cachedResources = remember { authManager.getCachedResources() }
@@ -166,6 +187,25 @@ class MainActivity : ComponentActivity() {
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 externalCameraLauncher.launch(intent)
+            }
+            
+            val shareLogs: () -> Unit = {
+                val logFile = LogManager.getLogFile()
+                if (logFile != null && logFile.exists()) {
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        logFile
+                    )
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Condividi Log"))
+                } else {
+                    Toast.makeText(context, "Nessun file di log trovato", Toast.LENGTH_SHORT).show()
+                }
             }
 
             val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -267,7 +307,6 @@ class MainActivity : ComponentActivity() {
                             loggedUsername = savedUsername,
                             apiaryList = apiaryList,
                             hiveList = hiveList,
-                            onInternalCamera = { currentScreen = MainScreen.INTERNAL_CAMERA },
                             onExternalCamera = {
                                 if (ContextCompat.checkSelfPermission(
                                         context,
@@ -280,6 +319,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onGallery = { currentScreen = MainScreen.GALLERY },
+                            onShareLogs = shareLogs,
                             onLogout = {
                                 authManager.logout()
                                 apiaryList = emptyList()
@@ -321,16 +361,6 @@ class MainActivity : ComponentActivity() {
                                     scale = scale
                                 )
                             }
-                        )
-
-                        MainScreen.INTERNAL_CAMERA -> InternalCameraScreen(
-                            beehiveLabel = selectedHive?.name.orEmpty(),
-                            scale = scale,
-                            onPhotoCaptured = { uri, _, _ ->
-                                pendingUploadUri = uri
-                                currentScreen = MainScreen.HOME
-                            },
-                            onBack = { currentScreen = MainScreen.HOME }
                         )
 
                         MainScreen.GALLERY -> GalleryScreen(

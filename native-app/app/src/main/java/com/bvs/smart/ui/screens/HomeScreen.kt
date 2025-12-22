@@ -65,9 +65,9 @@ fun HomeScreen(
     loggedUsername: String,
     apiaryList: List<Apiary>,
     hiveList: List<Arnia>,
-    onInternalCamera: () -> Unit,
     onExternalCamera: () -> Unit,
     onGallery: () -> Unit,
+    onShareLogs: () -> Unit,
     onLogout: () -> Unit,
     onApiarySelected: (Apiary) -> Unit,
     onArniaSelected: (Arnia) -> Unit,
@@ -249,12 +249,6 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PrimaryButton(
-                    text = "In-app camera",
-                    onClick = onInternalCamera,
-                    modifier = Modifier.weight(1f),
-                    fixedWidth = false
-                )
-                PrimaryButton(
                     text = "Device-camera",
                     onClick = onExternalCamera,
                     modifier = Modifier.weight(1f),
@@ -270,12 +264,20 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SecondaryButton(
-                text = "Logout",
-                onClick = onLogout,
-                modifier = Modifier
-                    .align(Alignment.End)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                SecondaryButton(
+                    text = "Condividi Log",
+                    onClick = onShareLogs
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                SecondaryButton(
+                    text = "Logout",
+                    onClick = onLogout
+                )
+            }
 
             Text(
                 text = baseUrl,

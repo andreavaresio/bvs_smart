@@ -94,7 +94,7 @@ fun BeehiveBadge(label: String) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = "Beehive: $label",
+            text = "Arnia: $label",
             color = Color(0xFFF57F17), // Darker yellow/orange for text contrast
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold
