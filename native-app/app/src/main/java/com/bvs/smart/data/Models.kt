@@ -14,7 +14,9 @@ data class Apiary(
     @SerializedName("latitude") val latitude: Double?,
     @SerializedName("longitude") val longitude: Double?,
     @SerializedName("alveari") val hives: List<Arnia>
-)
+) {
+    var ownerName: String? = null
+}
 
 data class Arnia(
     @SerializedName("nome") val name: String,

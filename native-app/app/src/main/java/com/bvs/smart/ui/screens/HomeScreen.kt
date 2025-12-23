@@ -76,6 +76,11 @@ fun HomeScreen(
     var apiaryMenuExpanded by remember { mutableStateOf(false) }
     var scaleText by remember(scale) { mutableStateOf(String.format(Locale.US, "%.2f", scale)) }
 
+    // Calculate if there are multiple owners to decide whether to show owner name
+    val hasMultipleOwners = remember(apiaryList) {
+        apiaryList.mapNotNull { it.ownerName }.distinct().size > 1
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -136,8 +141,11 @@ fun HomeScreen(
                     expanded = apiaryMenuExpanded,
                     onExpandedChange = { apiaryMenuExpanded = !apiaryMenuExpanded }
                 ) {
+                    val currentOwnerSuffix = if (hasMultipleOwners) selectedApiary?.ownerName?.let { " ($it)" } ?: "" else ""
+                    val currentApiaryText = selectedApiary?.let { "${it.name}$currentOwnerSuffix" } ?: "Seleziona un apiario"
+                    
                     OutlinedTextField(
-                        value = selectedApiary?.name ?: "Seleziona un apiario",
+                        value = currentApiaryText,
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = apiaryMenuExpanded) },
@@ -153,8 +161,9 @@ fun HomeScreen(
                         onDismissRequest = { apiaryMenuExpanded = false }
                     ) {
                         apiaryList.forEach { apiary ->
+                            val ownerSuffix = if (hasMultipleOwners) apiary.ownerName?.let { " ($it)" } ?: "" else ""
                             DropdownMenuItem(
-                                text = { Text(apiary.name) },
+                                text = { Text("${apiary.name}$ownerSuffix") },
                                 onClick = {
                                     apiaryMenuExpanded = false
                                     onApiarySelected(apiary)
@@ -202,8 +211,9 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
+                                    val ownerSuffix = if (hasMultipleOwners) selectedApiary?.ownerName?.let { " ($it)" } ?: "" else ""
                                     Text(
-                                        text = hive.name,
+                                        text = "${hive.name}$ownerSuffix",
                                         color = TextPrimary,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -249,7 +259,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PrimaryButton(
-                    text = "Device-camera",
+                    text = "Camera",
                     onClick = onExternalCamera,
                     modifier = Modifier.weight(1f),
                     fixedWidth = false

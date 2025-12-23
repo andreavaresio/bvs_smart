@@ -106,7 +106,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val cachedResources = remember { authManager.getCachedResources() }
             val selectionSnapshot = remember { authManager.loadSelection() }
-            val initialApiaries = remember(cachedResources) { cachedResources.flatMap { it.apiaries } }
+            val initialApiaries = remember(cachedResources) {
+                cachedResources.flatMap { owner ->
+                    owner.apiaries.onEach { it.ownerName = owner.ownerName }
+                }
+            }
             val initialApiary = remember(selectionSnapshot, initialApiaries) {
                 initialApiaries.find { it.name == selectionSnapshot.apiaryName } ?: initialApiaries.firstOrNull()
             }
@@ -230,6 +234,10 @@ class MainActivity : ComponentActivity() {
                                         val response = apiRepository.getResources(username, password, scanner)
                                         if (response.isSuccessful) {
                                             val payload = response.body().orEmpty()
+                                            // Populate transient ownerName
+                                            payload.forEach { owner ->
+                                                owner.apiaries.forEach { it.ownerName = owner.ownerName }
+                                            }
                                             val allApiaries = payload.flatMap { it.apiaries }
                                             apiaryList = allApiaries
                                             if (allApiaries.isNotEmpty()) {
