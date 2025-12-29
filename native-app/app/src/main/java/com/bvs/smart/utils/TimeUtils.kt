@@ -26,8 +26,8 @@ object TimeUtils {
             val now = Date()
             
             val diffMillis = now.time - date.time
-            // If the date is in the future (e.g. server clock drift), treat as "now" or handle gracefully
-            if (diffMillis < 0) return "0 min"
+            // If the date is in the future (e.g. server clock drift), treat as "just now"
+            if (diffMillis < 0) return "un attimo fa"
 
             val diffMin = TimeUnit.MILLISECONDS.toMinutes(diffMillis)
             val diffHours = TimeUnit.MILLISECONDS.toHours(diffMillis)

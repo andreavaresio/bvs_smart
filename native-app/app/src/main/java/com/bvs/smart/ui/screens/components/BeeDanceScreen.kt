@@ -209,14 +209,13 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                         }
 
                         if (tappedIndex >= 0) {
-                            // Tapped a bee -> Animate it!
+                            // HIT! -> Animate existing bee
                             val bee = bees[tappedIndex]
                             if (!bee.isAnimating) {
                                 bees[tappedIndex] = bee.copy(isAnimating = true, animationTime = 0f)
-                                actionSound.play(MediaActionSound.SHUTTER_CLICK)
                             }
-                        } else {
-                            // Tapped empty space -> Spawn new bee
+                            
+                            // AND Spawn a new bee
                             val startPos = clampPosition(
                                 Offset(
                                     x = tapOffset.x - beeSizePx / 2f,
@@ -225,6 +224,9 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                             )
                             bees.add(Bee(startPos, randomVelocity()))
                             actionSound.play(MediaActionSound.SHUTTER_CLICK)
+                        } else {
+                            // MISS! -> Exit game
+                            onExit()
                         }
                     }
                 }
