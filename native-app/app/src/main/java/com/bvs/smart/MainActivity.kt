@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
 
             var isUploading by remember { mutableStateOf(false) }
             var isLoggingIn by remember { mutableStateOf(false) }
+            var isRefreshing by remember { mutableStateOf(false) } // State for Pull-to-Refresh
             var loginError by remember { mutableStateOf<String?>(null) }
             
             // Temporary URI for camera capture
@@ -296,6 +297,44 @@ class MainActivity : ComponentActivity() {
                             versionCode = versionCode,
                             baseUrl = Config.API_BASE_URL,
                             loggedUsername = savedUsername,
+                            isRefreshing = isRefreshing,
+                            onRefresh = {
+                                if (savedUsername.isNotBlank() && savedPassword.isNotBlank()) {
+                                    scope.launch {
+                                        isRefreshing = true
+                                        try {
+                                            val response = apiRepository.getResources(savedUsername, savedPassword, Config.SCANNER_ID)
+                                            if (response.isSuccessful) {
+                                                val payload = response.body().orEmpty()
+                                                payload.forEach { owner ->
+                                                    owner.apiaries.forEach { it.ownerName = owner.ownerName }
+                                                }
+                                                val allApiaries = payload.flatMap { it.apiaries }
+                                                apiaryList = allApiaries
+                                                
+                                                // Update selectedApiary if it still exists, else pick first
+                                                if (allApiaries.isNotEmpty()) {
+                                                    val currentName = selectedApiary?.name
+                                                    selectedApiary = allApiaries.find { it.name == currentName } ?: allApiaries.first()
+                                                } else {
+                                                    selectedApiary = null
+                                                }
+                                                
+                                                authManager.saveResources(payload) // Persist updated data
+                                                Toast.makeText(context, "Dati aggiornati", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Errore aggiornamento: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Errore di rete", Toast.LENGTH_SHORT).show()
+                                        } finally {
+                                            isRefreshing = false
+                                        }
+                                    }
+                                } else {
+                                    isRefreshing = false
+                                }
+                            },
                             onApiarySelected = { apiary ->
                                 selectedApiary = apiary
                                 authManager.saveSelection(

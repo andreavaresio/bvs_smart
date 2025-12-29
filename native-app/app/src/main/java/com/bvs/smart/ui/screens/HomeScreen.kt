@@ -32,9 +32,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
@@ -71,14 +75,33 @@ fun HomeScreen(
     versionCode: Int,
     baseUrl: String,
     loggedUsername: String,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
     onApiarySelected: (Apiary) -> Unit,
-    onScanRequest: (Arnia, AuthManager.ScanSettings) -> Unit, // Removed Boolean
+    onScanRequest: (Arnia, AuthManager.ScanSettings) -> Unit,
     onShareLogs: () -> Unit,
     onLogout: () -> Unit
 ) {
     val leftDrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val rightDrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    
+    // Pull to Refresh State
+    val pullRefreshState = rememberPullToRefreshState()
+    if (pullRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            onRefresh()
+        }
+    }
+    
+    // Sync state: if external isRefreshing becomes false, stop the internal state
+    LaunchedEffect(isRefreshing) {
+        if (!isRefreshing) {
+            pullRefreshState.endRefresh()
+        } else {
+            pullRefreshState.startRefresh()
+        }
+    }
     
     var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
 
@@ -163,34 +186,42 @@ fun HomeScreen(
                         },
                         containerColor = AppBackground
                     ) { paddingValues ->
-                        if (selectedApiary == null || selectedApiary.hives.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(paddingValues)
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Nessuna arnia disponibile", color = TextSecondary)
-                            }
-                        }
-                        else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 16.dp),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                    top = paddingValues.calculateTopPadding() + 16.dp,
-                                    bottom = 32.dp
-                                ),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(selectedApiary.hives) { hive ->
-                                    HiveCard(
-                                        hive = hive,
-                                        onClick = { showScanDialogForHive = hive }
-                                    )
+                        Box(
+                            modifier = Modifier
+                                .padding(paddingValues)
+                                .fillMaxSize()
+                                .nestedScroll(pullRefreshState.nestedScrollConnection)
+                        ) {
+                            if (selectedApiary == null || selectedApiary.hives.isEmpty()) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text("Nessuna arnia disponibile", color = TextSecondary)
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 16.dp),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                        top = 16.dp,
+                                        bottom = 32.dp
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(selectedApiary.hives) { hive ->
+                                        HiveCard(
+                                            hive = hive,
+                                            onClick = { showScanDialogForHive = hive }
+                                        )
+                                    }
                                 }
                             }
+                            
+                            PullToRefreshContainer(
+                                state = pullRefreshState,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                containerColor = Color.White,
+                                contentColor = YellowPrimary
+                            )
                         }
                     }
                 }

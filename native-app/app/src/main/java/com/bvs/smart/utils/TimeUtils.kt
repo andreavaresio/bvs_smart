@@ -34,9 +34,10 @@ object TimeUtils {
             val diffDays = TimeUnit.MILLISECONDS.toDays(diffMillis)
 
             return when {
+                diffMin < 1 -> "un attimo fa"
                 diffMin < 60 -> "$diffMin min"
                 diffHours < 24 -> "$diffHours h"
-                diffDays <= 5 -> "$diffDays gg"
+                diffDays <= 3 -> "$diffDays gg"
                 else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
             }
         } catch (e: Exception) {
