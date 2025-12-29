@@ -32,6 +32,10 @@ class ApiRepository(
         )
 
         if (response.isSuccessful) {
+            // Log raw JSON for debugging
+            val rawJson = response.body()?.let { com.google.gson.Gson().toJson(it) }
+            LogManager.i("API_DEBUG", "getResources RAW JSON: $rawJson")
+
             authManager.saveCredentials(username, password)
             response.body()?.let { owners ->
                 authManager.saveResources(owners)
