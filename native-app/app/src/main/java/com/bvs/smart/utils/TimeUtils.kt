@@ -36,7 +36,7 @@ object TimeUtils {
             return when {
                 diffMin < 60 -> "$diffMin min"
                 diffHours < 24 -> "$diffHours h"
-                diffDays <= 3 -> "$diffDays gg"
+                diffDays <= 5 -> "$diffDays gg"
                 else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
             }
         } catch (e: Exception) {

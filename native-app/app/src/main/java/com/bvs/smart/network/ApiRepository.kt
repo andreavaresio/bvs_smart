@@ -1,6 +1,7 @@
 package com.bvs.smart.network
 
 import com.bvs.smart.data.ResourceOwner
+import com.bvs.smart.utils.LogManager
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
