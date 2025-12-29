@@ -53,7 +53,7 @@ fun ScanDialog(
     hive: Arnia,
     initialSettings: AuthManager.ScanSettings,
     onDismiss: () -> Unit,
-    onConfirm: (AuthManager.ScanSettings, Boolean) -> Unit // Boolean: true = Camera, false = Gallery
+    onConfirm: (AuthManager.ScanSettings) -> Unit
 ) {
     var scale by remember { mutableStateOf(initialSettings.scale.toString()) }
     var permanenceDays by remember { mutableStateOf(initialSettings.permanenceDays.toString()) }
@@ -159,29 +159,18 @@ fun ScanDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Action Buttons (Camera / Gallery)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Action Button (Next)
+                Button(
+                    onClick = {
+                        val settings = validateAndCreateSettings(scale, permanenceDays, measureType, photosPerScan)
+                        onConfirm(settings)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = TextPrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    elevation = ButtonDefaults.buttonElevation(4.dp)
                 ) {
-                    BigActionButton(
-                        icon = Icons.Default.CameraAlt,
-                        label = "Camera",
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            val settings = validateAndCreateSettings(scale, permanenceDays, measureType, photosPerScan)
-                            onConfirm(settings, true) // true = Camera
-                        }
-                    )
-                    BigActionButton(
-                        icon = Icons.Default.PhotoLibrary,
-                        label = "Gallery",
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            val settings = validateAndCreateSettings(scale, permanenceDays, measureType, photosPerScan)
-                            onConfirm(settings, false) // false = Gallery
-                        }
-                    )
+                    Text(text = "AVANTI", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

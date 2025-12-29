@@ -57,6 +57,17 @@ class ApiRepository(
         )
     }
 
+    suspend fun uploadFotoMulti(
+        params: Map<String, RequestBody>,
+        files: List<MultipartBody.Part>
+    ): Response<ResponseBody> {
+        return api.uploadPhotoMulti(
+            url = uploadImageUrl,
+            parts = params,
+            files = files
+        )
+    }
+
     // Capability sync is currently disabled; retain the call for future reuse.
     /*
     suspend fun syncCapabilities(payload: com.bvs.smart.data.DeviceCapabilities): Response<ResponseBody> {

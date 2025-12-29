@@ -33,6 +33,14 @@ interface ApiService {
 
     @Multipart
     @POST
+    suspend fun uploadPhotoMulti(
+        @Url url: String,
+        @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part files: List<MultipartBody.Part>
+    ): Response<ResponseBody>
+
+    @Multipart
+    @POST
     suspend fun getResources(
         @Url url: String,
         @PartMap parts: Map<String, @JvmSuppressWildcards RequestBody>

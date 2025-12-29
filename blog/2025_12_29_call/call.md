@@ -41,3 +41,9 @@ Possiamo usare dei trucchi?
 
 Per ora togliere il tasto della Camera Scan che sarà letto da configurazione.
 
+### Posizione
+
+Va chiesta all'utente la posizione quando effettuiamo lo scatto.
+É un campo sticky, quindi ricorda l'ultima posizione.
+Mi piacerebbe aprire G Maps e poi quando l'utente seleziona, ritorno all'app con latitude e longitude.
+

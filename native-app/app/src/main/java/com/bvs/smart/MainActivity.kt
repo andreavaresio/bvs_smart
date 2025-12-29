@@ -50,6 +50,8 @@ import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
 import com.bvs.smart.ui.screens.LoginScreen
+import com.bvs.smart.ui.screens.ScanSessionScreen
+import com.bvs.smart.ui.screens.SourceSelectionDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,7 +69,8 @@ import java.util.Locale
 private enum class MainScreen {
     LOGIN,
     HOME,
-    GALLERY
+    GALLERY,
+    SCAN_SESSION
 }
 
 class MainActivity : ComponentActivity() {
@@ -79,11 +82,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize Logger
         LogManager.init(this)
         LogManager.i("App", "App Started - Version: ${packageManager.getPackageInfo(packageName, 0).versionName}")
 
-        // Log Device Capabilities
         lifecycleScope.launch {
             try {
                 val caps = deviceManager.getDeviceCapabilities()
@@ -93,7 +94,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Global Crash Handler
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             LogManager.e("Crash", "Uncaught Exception on thread ${thread.name}", throwable)
@@ -114,7 +114,6 @@ class MainActivity : ComponentActivity() {
             }
             val hasCachedCredentials = remember { authManager.hasCredentials() }
             
-            // Persistent Settings
             var scanSettings by remember { mutableStateOf(authManager.loadScanSettings()) }
 
             val scope = rememberCoroutineScope()
@@ -126,14 +125,19 @@ class MainActivity : ComponentActivity() {
             var apiaryList by remember { mutableStateOf(initialApiaries) }
             var selectedApiary by remember { mutableStateOf(initialApiary) }
             
-            // Upload State
-            var pendingUploadHive by remember { mutableStateOf<Arnia?>(null) }
-            var pendingUploadSettings by remember { mutableStateOf<AuthManager.ScanSettings?>(null) }
+            // Session State
+            var currentSessionHive by remember { mutableStateOf<Arnia?>(null) }
+            var currentSessionPhotos by remember { mutableStateOf<List<Uri?>>(emptyList()) }
+            var activeSlotIndex by remember { mutableStateOf<Int?>(null) }
+            var showSourceDialog by remember { mutableStateOf(false) }
+
             var isUploading by remember { mutableStateOf(false) }
             var isLoggingIn by remember { mutableStateOf(false) }
             var loginError by remember { mutableStateOf<String?>(null) }
-            var pendingUploadUri by remember { mutableStateOf<Uri?>(null) }
-            var tempExternalUri by remember { mutableStateOf<Uri?>(null) }
+            
+            // Temporary URI for camera capture
+            var tempCaptureUri by remember { mutableStateOf<Uri?>(null) }
+            
             var savedUsername by remember { mutableStateOf(authManager.getUsername().orEmpty()) }
             var savedPassword by remember { mutableStateOf(authManager.getPassword().orEmpty()) }
 
@@ -163,18 +167,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val externalCameraLauncher = rememberLauncherForActivityResult(
+            val cameraLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.StartActivityForResult()
             ) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    tempExternalUri?.let { pendingUploadUri = it }
-                } else {
-                    tempExternalUri = null
-                    // Do not reset pendingUploadHive/Settings here, give chance to retry or let logic handle it
+                    val slot = activeSlotIndex
+                    if (slot != null && tempCaptureUri != null) {
+                        val newList = currentSessionPhotos.toMutableList()
+                        if (slot in newList.indices) {
+                            newList[slot] = tempCaptureUri
+                            currentSessionPhotos = newList
+                        }
+                    }
                 }
+                activeSlotIndex = null
+                tempCaptureUri = null
             }
 
-            val startExternalCamera: () -> Unit = {
+            val startCameraForSlot: (Int) -> Unit = { slotIndex ->
                 val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 val photoFile = createPhotoFile(context)
                 val uri = FileProvider.getUriForFile(
@@ -182,12 +192,24 @@ class MainActivity : ComponentActivity() {
                     "${context.packageName}.fileprovider",
                     photoFile
                 )
-                tempExternalUri = uri
+                tempCaptureUri = uri
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                externalCameraLauncher.launch(intent)
+                
+                activeSlotIndex = slotIndex
+                cameraLauncher.launch(intent)
             }
             
+            val cameraPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                if (granted && activeSlotIndex != null) {
+                    startCameraForSlot(activeSlotIndex!!)
+                } else {
+                    Toast.makeText(context, "Permesso fotocamera negato", Toast.LENGTH_LONG).show()
+                }
+            }
+
             val shareLogs: () -> Unit = {
                 val logFile = LogManager.getLogFile()
                 if (logFile != null && logFile.exists()) {
@@ -207,16 +229,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val cameraPermissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { granted ->
-                if (granted) {
-                    startExternalCamera()
-                } else {
-                    Toast.makeText(context, "Permesso fotocamera negato", Toast.LENGTH_LONG).show()
-                }
-            }
-
             Box(modifier = Modifier.fillMaxSize()) {
                 Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
@@ -229,7 +241,6 @@ class MainActivity : ComponentActivity() {
                                         val response = apiRepository.getResources(username, password, Config.SCANNER_ID)
                                         if (response.isSuccessful) {
                                             val payload = response.body().orEmpty()
-                                            // Populate transient ownerName
                                             payload.forEach { owner ->
                                                 owner.apiaries.forEach { it.ownerName = owner.ownerName }
                                             }
@@ -241,7 +252,6 @@ class MainActivity : ComponentActivity() {
                                                     ?: allApiaries.first()
                                                 
                                                 selectedApiary = matchingApiary
-                                                // Load persistent scan settings
                                                 scanSettings = authManager.loadScanSettings()
 
                                                 savedUsername = username
@@ -254,33 +264,22 @@ class MainActivity : ComponentActivity() {
                                                 currentScreen = MainScreen.HOME
                                             } else {
                                                 selectedApiary = null
-                                                loginError = "Nessun dato disponibile per il profilo selezionato."
+                                                loginError = "Nessun dato disponibile."
                                             }
                                         } else {
-                                            loginError = "Credenziali errate o problema server."
+                                            loginError = "Credenziali errate."
                                         }
                                     } catch (error: Exception) {
                                         if (apiaryList.isNotEmpty() && username == savedUsername && password == savedPassword) {
-                                            loginError = null
-                                            Toast.makeText(
-                                                context,
-                                                "Offline: uso i dati salvati.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
                                             currentScreen = MainScreen.HOME
                                         } else {
                                             loginError = "Errore di rete: ${error.message}"
-                                            Toast.makeText(
-                                                context,
-                                                "Errore di rete: ${error.message}",
-                                                Toast.LENGTH_LONG
-                                            ).show()
                                         }
                                     } finally {
                                         isLoggingIn = false
                                     }
-                        }
-                    },
+                                }
+                            },
                             isLoading = isLoggingIn,
                             errorMessage = loginError,
                             initialUsername = savedUsername,
@@ -305,99 +304,103 @@ class MainActivity : ComponentActivity() {
                                     scale = scanSettings.scale
                                 )
                             },
-                            onScanRequest = { hive, settings, isCamera ->
-                                pendingUploadHive = hive
-                                pendingUploadSettings = settings
-                                scanSettings = settings // Update state
+                            onScanRequest = { hive, settings ->
+                                // Prepare Session
+                                currentSessionHive = hive
+                                scanSettings = settings
+                                // Initialize photo slots (nulls)
+                                currentSessionPhotos = List(settings.photosPerScan) { null }
+                                
                                 authManager.saveScanSettings(
-                                    scale = settings.scale,
-                                    permanenceDays = settings.permanenceDays,
-                                    measureType = settings.measureType,
-                                    photosPerScan = settings.photosPerScan
+                                    settings.scale, settings.permanenceDays, settings.measureType, settings.photosPerScan
                                 )
                                 
-                                if (isCamera) {
-                                    if (ContextCompat.checkSelfPermission(
-                                            context,
-                                            Manifest.permission.CAMERA
-                                        ) == PackageManager.PERMISSION_GRANTED
-                                    ) {
-                                        startExternalCamera()
-                                    } else {
-                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                    }
-                                } else {
-                                    currentScreen = MainScreen.GALLERY
-                                }
+                                currentScreen = MainScreen.SCAN_SESSION
                             },
                             onShareLogs = shareLogs,
                             onLogout = {
                                 authManager.logout()
                                 apiaryList = emptyList()
                                 selectedApiary = null
-                                isLoggingIn = false
-                                isUploading = false
-                                loginError = null
-                                savedPassword = ""
+                                savedPassword = "" // Reset UI state password
                                 currentScreen = MainScreen.LOGIN
                             }
                         )
 
+                        MainScreen.SCAN_SESSION -> {
+                            val hive = currentSessionHive
+                            if (hive != null) {
+                                ScanSessionScreen(
+                                    hive = hive,
+                                    settings = scanSettings,
+                                    photos = currentSessionPhotos,
+                                    onPhotoSlotClicked = { index ->
+                                        activeSlotIndex = index
+                                        showSourceDialog = true
+                                    },
+                                    onDeletePhoto = { index ->
+                                        val newList = currentSessionPhotos.toMutableList()
+                                        newList[index] = null
+                                        currentSessionPhotos = newList
+                                    },
+                                    onSend = {
+                                        val validUris = currentSessionPhotos.filterNotNull()
+                                        if (validUris.size == scanSettings.photosPerScan) {
+                                            isUploading = true
+                                            uploadPhotos(
+                                                context = context,
+                                                uris = validUris,
+                                                hive = hive,
+                                                settings = scanSettings,
+                                                onComplete = { 
+                                                    isUploading = false 
+                                                    currentScreen = MainScreen.HOME // Go back home after upload
+                                                }
+                                            )
+                                        }
+                                    },
+                                    onBack = { currentScreen = MainScreen.HOME }
+                                )
+                            }
+                        }
+
                         MainScreen.GALLERY -> GalleryScreen(
                             onPhotoSelected = { uri ->
-                                pendingUploadUri = uri
-                                currentScreen = MainScreen.HOME
+                                val slot = activeSlotIndex
+                                if (slot != null && slot in currentSessionPhotos.indices) {
+                                    val newList = currentSessionPhotos.toMutableList()
+                                    newList[slot] = uri
+                                    currentSessionPhotos = newList
+                                }
+                                activeSlotIndex = null
+                                currentScreen = MainScreen.SCAN_SESSION
                             },
-                            onBack = { currentScreen = MainScreen.HOME }
+                            onBack = { currentScreen = MainScreen.SCAN_SESSION }
                         )
                     }
                 }
 
-                if (pendingUploadUri != null && pendingUploadHive != null && pendingUploadSettings != null) {
-                    val hiveName = pendingUploadHive?.name
-                    AlertDialog(
-                        onDismissRequest = { 
-                            pendingUploadUri = null 
-                            pendingUploadHive = null
+                if (showSourceDialog) {
+                    SourceSelectionDialog(
+                        onDismiss = { 
+                            showSourceDialog = false 
+                            activeSlotIndex = null
                         },
-                        title = { Text(text = "Conferma Invio") },
-                        text = { Text(text = "Vuoi inviare la foto per l'arnia '$hiveName'?") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    val uri = pendingUploadUri
-                                    val hive = pendingUploadHive
-                                    val settings = pendingUploadSettings
-                                    if (uri != null && hive != null && settings != null) {
-                                        pendingUploadUri = null
-                                        isUploading = true
-                                        uploadPhoto(
-                                            context = context,
-                                            uri = uri,
-                                            hive = hive,
-                                            settings = settings,
-                                            onComplete = { 
-                                                isUploading = false 
-                                                pendingUploadHive = null // Reset after upload
-                                            }
-                                        )
-                                    }
+                        onCamera = {
+                            showSourceDialog = false
+                            val slot = activeSlotIndex
+                            if (slot != null) {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                    startCameraForSlot(slot)
+                                } else {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                 }
-                            ) {
-                                Text("Sì", color = YellowPrimary)
                             }
                         },
-                        dismissButton = {
-                            TextButton(onClick = { 
-                                pendingUploadUri = null 
-                                pendingUploadHive = null
-                            }) {
-                                Text("No", color = Color.Gray)
-                            }
-                        },
-                        containerColor = Color(0xFF1A1A1A),
-                        titleContentColor = Color.White,
-                        textContentColor = Color.White
+                        onGallery = {
+                            showSourceDialog = false
+                            currentScreen = MainScreen.GALLERY
+                        }
                     )
                 }
 
@@ -413,10 +416,7 @@ class MainActivity : ComponentActivity() {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = YellowPrimary)
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Invio in corso...",
-                                color = Color.White
-                            )
+                            Text(text = "Invio ${scanSettings.photosPerScan} foto...", color = Color.White)
                         }
                     }
                 }
@@ -430,9 +430,9 @@ class MainActivity : ComponentActivity() {
         return File.createTempFile("IMG_${timeStamp}_", ".jpg", storageDir)
     }
 
-    private fun uploadPhoto(
+    private fun uploadPhotos(
         context: Context,
-        uri: Uri,
+        uris: List<Uri>,
         hive: Arnia,
         settings: AuthManager.ScanSettings,
         onComplete: () -> Unit
@@ -441,11 +441,7 @@ class MainActivity : ComponentActivity() {
         val password = authManager.getPassword()
 
         if (username.isNullOrBlank() || password.isNullOrBlank()) {
-            Toast.makeText(
-                context,
-                "Effettua il login per poter inviare le foto.",
-                Toast.LENGTH_LONG
-            ).show()
+            Toast.makeText(context, "Login richiesto.", Toast.LENGTH_LONG).show()
             onComplete()
             return
         }
@@ -453,33 +449,31 @@ class MainActivity : ComponentActivity() {
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             try {
-                val contentResolver = context.contentResolver
-                val inputStream = contentResolver.openInputStream(uri)
-                val tempFile = File.createTempFile("upload", ".jpg", context.cacheDir)
-                tempFile.outputStream().use { output ->
-                    inputStream?.copyTo(output)
+                // Prepare Multipart Body parts for files[]
+                val fileParts = uris.mapIndexed { index, uri ->
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val tempFile = File.createTempFile("upload_$index", ".jpg", context.cacheDir)
+                    tempFile.outputStream().use { output ->
+                        inputStream?.copyTo(output)
+                    }
+                    val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("files[]", tempFile.name, requestFile)
                 }
-
-                val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("files[]", tempFile.name, requestFile)
 
                 val now = Date()
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ITALY)
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.ITALY)
                 val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss.SSS'Z'", Locale.US)
-
                 val textMediaType = "text/plain".toMediaTypeOrNull()
 
                 val params: Map<String, RequestBody> = mapOf(
                     "username" to username.toRequestBody(textMediaType),
                     "password" to password.toRequestBody(textMediaType),
                     "arniaId" to hive.code.toRequestBody(textMediaType),
-                    "note" to "Foto scattata il ${SimpleDateFormat("dd MMMM yyyy HH:mm", Locale.ITALY).format(now)}"
+                    "note" to "Sessione ${settings.photosPerScan} foto. ${SimpleDateFormat("dd/MM HH:mm", Locale.ITALY).format(now)}"
                         .toRequestBody(textMediaType),
-                    "ScaleforConta" to String.format(Locale.US, "%.2f", settings.scale)
-                        .toRequestBody(textMediaType),
-                    "timestamp" to timestampFormat.format(now).replace(":", "-")
-                        .toRequestBody(textMediaType),
+                    "ScaleforConta" to String.format(Locale.US, "%.2f", settings.scale).toRequestBody(textMediaType),
+                    "timestamp" to timestampFormat.format(now).replace(":", "-").toRequestBody(textMediaType),
                     "GPS" to "45.0352891,7.5168128".toRequestBody(textMediaType),
                     "NumeroGGPermanenza" to settings.permanenceDays.toString().toRequestBody(textMediaType),
                     "data_prelievo_data" to dateFormat.format(now).toRequestBody(textMediaType),
@@ -487,29 +481,25 @@ class MainActivity : ComponentActivity() {
                     "tipo_misura" to settings.measureType.toRequestBody(textMediaType)
                 )
 
-                val response = apiRepository.uploadFoto(params, body)
+                // Call API (Need to update ApiService to accept List<MultipartBody.Part>?)
+                // Current ApiService expects @Part file: MultipartBody.Part. 
+                // We need to change it to accept List. But wait, ApiRepository/ApiService signature needs update.
+                // For now, let's assume we update ApiRepository next.
+                
+                val response = apiRepository.uploadFotoMulti(params, fileParts)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        val message = response.body()?.string() ?: "Upload completato"
-                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Upload completato!", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Upload non riuscito: ${response.code()}",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast.makeText(context, "Errore upload: ${response.code()}", Toast.LENGTH_LONG).show()
                     }
                     onComplete()
                 }
             } catch (error: Exception) {
                 error.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        "Errore durante l'upload: ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(context, "Errore: ${error.message}", Toast.LENGTH_LONG).show()
                     onComplete()
                 }
             }

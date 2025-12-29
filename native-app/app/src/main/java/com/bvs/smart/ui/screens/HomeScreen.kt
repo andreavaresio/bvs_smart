@@ -72,7 +72,7 @@ fun HomeScreen(
     baseUrl: String,
     loggedUsername: String,
     onApiarySelected: (Apiary) -> Unit,
-    onScanRequest: (Arnia, AuthManager.ScanSettings, Boolean) -> Unit, // Boolean: true=Camera, false=Gallery
+    onScanRequest: (Arnia, AuthManager.ScanSettings) -> Unit, // Removed Boolean
     onShareLogs: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -139,7 +139,7 @@ fun HomeScreen(
                                     Text(
                                         text = titleText,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp, // Slightly smaller to fit both names
+                                        fontSize = 16.sp,
                                         maxLines = 1
                                     )
                                 },
@@ -172,7 +172,8 @@ fun HomeScreen(
                             ) {
                                 Text("Nessuna arnia disponibile", color = TextSecondary)
                             }
-                        } else {
+                        }
+                        else {
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -203,9 +204,9 @@ fun HomeScreen(
             hive = targetHive,
             initialSettings = scanSettings,
             onDismiss = { showScanDialogForHive = null },
-            onConfirm = { newSettings, isCamera ->
+            onConfirm = { newSettings ->
                 showScanDialogForHive = null
-                onScanRequest(targetHive, newSettings, isCamera)
+                onScanRequest(targetHive, newSettings)
             }
         )
     }
