@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -188,17 +189,27 @@ fun LoginScreen(
             )
         }
 
-        Text(
-            text = "Version $versionName ($versionCode)",
-            color = TextSecondary.copy(alpha = 0.6f),
-            fontSize = 12.sp,
+        Row(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
                 .combinedClickable(
                     onClick = {},
                     onLongClick = { showBeeDance = true }
-                )
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
-        )
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "$versionCode ",
+                color = TextSecondary.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "($versionName)",
+                color = TextSecondary.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
+        }
     }
 }

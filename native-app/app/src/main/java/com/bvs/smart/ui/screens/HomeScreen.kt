@@ -289,17 +289,33 @@ fun HomeScreen(
                 )
             }
 
-            Text(
-                text = baseUrl,
-                color = TextSecondary.copy(alpha = 0.6f),
-                fontSize = 12.sp
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Version $versionName ($versionCode)",
-                color = TextSecondary.copy(alpha = 0.6f),
-                fontSize = 12.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = baseUrl,
+                    color = TextSecondary.copy(alpha = 0.6f),
+                    fontSize = 12.sp
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "$versionCode ",
+                        color = TextSecondary.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "($versionName)",
+                        color = TextSecondary.copy(alpha = 0.6f),
+                        fontSize = 12.sp
+                    )
+                }
+            }
         }
     }
 }
