@@ -53,6 +53,8 @@ import com.bvs.smart.ui.components.YellowLight
 import com.bvs.smart.ui.components.YellowPrimary
 import java.util.Locale
 
+import com.bvs.smart.utils.TimeUtils
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -223,9 +225,9 @@ fun HomeScreen(
                                         fontSize = 12.sp
                                     )
                                 }
-                                hive.lastSampleDate?.takeIf { it.isNotBlank() }?.let {
+                                TimeUtils.getRelativeTimeDisplay(hive.lastSampleDate)?.let { dateDisplay ->
                                     Text(
-                                        text = it.substringBefore('T'),
+                                        text = dateDisplay,
                                         color = TextPrimary,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 14.sp,
