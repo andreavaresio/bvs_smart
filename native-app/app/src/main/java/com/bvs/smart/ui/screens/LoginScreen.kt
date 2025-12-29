@@ -3,17 +3,17 @@ package com.bvs.smart.ui.screens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,114 +67,132 @@ fun LoginScreen(
         return
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppBackground)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize()) {
+        // --- Background Layer: Isolated in ui.components ---
+        BeeWorldBackground()
+
+        // --- Foreground Layer: The Glass Card ---
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            // Logo
-            Image(
-                painter = painterResource(id = R.drawable.splash_logo),
-                contentDescription = "BeeVS Logo",
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .size(150.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "BeeVS Mobile",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = TextPrimary
-            )
-            
-            Text(
-                text = "Accedi per gestire le tue arnie",
-                fontSize = 16.sp,
-                color = TextSecondary
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Form
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Email") },
-                placeholder = { Text("esempio@mail.it") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = YellowPrimary,
-                    unfocusedBorderColor = BorderColor
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color(0xFFF7F7F7).copy(alpha = 0.9f))
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                    .padding(horizontal = 24.dp, vertical = 40.dp)
+            ) {
+                // Logo
+                Image(
+                    painter = painterResource(id = R.drawable.splash_logo),
+                    contentDescription = "BeeVS Logo",
+                    modifier = Modifier.size(100.dp)
                 )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password"
-                        )
-                    }
-                },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = YellowPrimary,
-                    unfocusedBorderColor = BorderColor
-                )
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            if (!errorMessage.isNullOrBlank()) {
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 Text(
-                    text = errorMessage,
-                    color = Color(0xFFD32F2F),
+                    text = "BeeVS Mobile",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = TextPrimary
+                )
+                
+                Text(
+                    text = "Accedi al tuo alveare",
                     fontSize = 14.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                    color = TextSecondary.copy(alpha = 0.8f)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Form
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Email") },
+                    placeholder = { Text("esempio@mail.it") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = YellowPrimary,
+                        unfocusedBorderColor = BorderColor,
+                        focusedContainerColor = Color.White.copy(alpha = 0.7f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.7f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = if (passwordVisible) "Nascondi password" else "Mostra password"
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = YellowPrimary,
+                        unfocusedBorderColor = BorderColor,
+                        focusedContainerColor = Color.White.copy(alpha = 0.7f),
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.7f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (!errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                    )
+                }
+
+                PrimaryButton(
+                    text = if (isLoading) "ACCESSO..." else "ENTRA",
+                    onClick = {
+                        if (username.isNotBlank() && password.isNotBlank()) {
+                            onLoginSuccess(username.trim(), password)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
             }
-
-            PrimaryButton(
-                text = if (isLoading) "Accesso in corso..." else "ACCEDI",
-                onClick = {
-                    if (username.isNotBlank() && password.isNotBlank()) {
-                        onLoginSuccess(username.trim(), password)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
-            )
         }
 
+        // Version Footer
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
+                .padding(bottom = 24.dp)
                 .combinedClickable(
                     onClick = {},
                     onLongClick = { showBeeDance = true }
@@ -182,13 +201,13 @@ fun LoginScreen(
         ) {
             Text(
                 text = "$versionCode ",
-                color = TextSecondary.copy(alpha = 0.6f),
+                color = TextSecondary.copy(alpha = 0.5f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "($versionName)",
-                color = TextSecondary.copy(alpha = 0.6f),
+                color = TextSecondary.copy(alpha = 0.5f),
                 fontSize = 12.sp
             )
         }
