@@ -42,18 +42,16 @@ import com.bvs.smart.ui.screens.components.BeeDanceScreen
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String, String, String) -> Unit,
+    onLoginSuccess: (String, String) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
     initialUsername: String,
     initialPassword: String,
-    initialScanner: String,
     versionName: String,
     versionCode: Int
 ) {
     var username by rememberSaveable(initialUsername) { mutableStateOf(initialUsername) }
     var password by rememberSaveable(initialPassword) { mutableStateOf(initialPassword) }
-    var scanner by rememberSaveable(initialScanner) { mutableStateOf(initialScanner) }
     var passwordVisible by remember { mutableStateOf(false) }
     var showBeeDance by remember { mutableStateOf(false) }
 
@@ -148,23 +146,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedTextField(
-                value = scanner,
-                onValueChange = { scanner = it },
-                label = { Text("Scanner ID") },
-                placeholder = { Text("SCANNER_DEMO_1") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = YellowPrimary,
-                    unfocusedBorderColor = BorderColor
-                )
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
             if (!errorMessage.isNullOrBlank()) {
                 Text(
                     text = errorMessage,
@@ -180,8 +161,8 @@ fun LoginScreen(
             PrimaryButton(
                 text = if (isLoading) "Accesso in corso..." else "ACCEDI",
                 onClick = {
-                    if (username.isNotBlank() && password.isNotBlank() && scanner.isNotBlank()) {
-                        onLoginSuccess(username.trim(), password, scanner.trim())
+                    if (username.isNotBlank() && password.isNotBlank()) {
+                        onLoginSuccess(username.trim(), password)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

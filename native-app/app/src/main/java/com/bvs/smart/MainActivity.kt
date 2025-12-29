@@ -64,9 +64,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private const val API_BASE_URL = "https://ec200296.seewebcloud.it/api/v4/"
-private const val DEFAULT_SCANNER = "SCANNER_DEMO_1"
-
 private enum class MainScreen {
     LOGIN,
     HOME,
@@ -76,7 +73,7 @@ private enum class MainScreen {
 class MainActivity : ComponentActivity() {
 
     private val authManager by lazy { AuthManager(this) }
-    private val apiRepository by lazy { ApiRepository(authManager, API_BASE_URL) }
+    private val apiRepository by lazy { ApiRepository(authManager, Config.API_BASE_URL) }
     private val deviceManager by lazy { DeviceManager(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,7 +136,6 @@ class MainActivity : ComponentActivity() {
             var tempExternalUri by remember { mutableStateOf<Uri?>(null) }
             var savedUsername by remember { mutableStateOf(authManager.getUsername().orEmpty()) }
             var savedPassword by remember { mutableStateOf(authManager.getPassword().orEmpty()) }
-            var savedScanner by remember { mutableStateOf(DEFAULT_SCANNER) }
 
             val context = this@MainActivity
 
@@ -226,12 +222,12 @@ class MainActivity : ComponentActivity() {
                 Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
                         MainScreen.LOGIN -> LoginScreen(
-                            onLoginSuccess = { username, password, scanner ->
+                            onLoginSuccess = { username, password ->
                                 scope.launch {
                                     isLoggingIn = true
                                     loginError = null
                                     try {
-                                        val response = apiRepository.getResources(username, password, scanner)
+                                        val response = apiRepository.getResources(username, password, Config.SCANNER_ID)
                                         if (response.isSuccessful) {
                                             val payload = response.body().orEmpty()
                                             // Populate transient ownerName
@@ -255,7 +251,6 @@ class MainActivity : ComponentActivity() {
 
                                                 savedUsername = username
                                                 savedPassword = password
-                                                savedScanner = scanner
                                                 authManager.saveSelection(
                                                     apiaryName = selectedApiary?.name,
                                                     hiveCode = selectedHive?.code,
@@ -300,7 +295,6 @@ class MainActivity : ComponentActivity() {
                             errorMessage = loginError,
                             initialUsername = savedUsername,
                             initialPassword = savedPassword,
-                            initialScanner = savedScanner,
                             versionName = versionName,
                             versionCode = versionCode
                         )
@@ -311,7 +305,7 @@ class MainActivity : ComponentActivity() {
                             scale = scale,
                             versionName = versionName,
                             versionCode = versionCode,
-                            baseUrl = API_BASE_URL,
+                            baseUrl = Config.API_BASE_URL,
                             loggedUsername = savedUsername,
                             apiaryList = apiaryList,
                             hiveList = hiveList,
@@ -340,7 +334,6 @@ class MainActivity : ComponentActivity() {
                                 loginError = null
                                 // preserve last username so login form stays prefilled
                                 savedPassword = ""
-                                savedScanner = DEFAULT_SCANNER
                                 currentScreen = MainScreen.LOGIN
                             },
                             onApiarySelected = { apiary ->
