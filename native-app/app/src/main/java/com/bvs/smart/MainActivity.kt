@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val cachedResources = remember { authManager.getCachedResources() }
             val selectionSnapshot = remember { authManager.loadSelection() }
+            
             val initialApiaries = remember(cachedResources) {
                 cachedResources.flatMap { owner ->
                     owner.apiaries.onEach { it.ownerName = owner.ownerName }
@@ -111,12 +112,10 @@ class MainActivity : ComponentActivity() {
             val initialApiary = remember(selectionSnapshot, initialApiaries) {
                 initialApiaries.find { it.name == selectionSnapshot.apiaryName } ?: initialApiaries.firstOrNull()
             }
-            val initialHives = remember(initialApiary) { initialApiary?.hives.orEmpty() }
-            val initialHive = remember(selectionSnapshot, initialHives) {
-                initialHives.find { it.code == selectionSnapshot.hiveCode } ?: initialHives.firstOrNull()
-            }
-            val initialScale = selectionSnapshot.scale ?: 1.0
             val hasCachedCredentials = remember { authManager.hasCredentials() }
+            
+            // Persistent Settings
+            var scanSettings by remember { mutableStateOf(authManager.loadScanSettings()) }
 
             val scope = rememberCoroutineScope()
             var currentScreen by remember {
@@ -126,9 +125,10 @@ class MainActivity : ComponentActivity() {
             }
             var apiaryList by remember { mutableStateOf(initialApiaries) }
             var selectedApiary by remember { mutableStateOf(initialApiary) }
-            var hiveList by remember { mutableStateOf(initialHives) }
-            var selectedHive by remember { mutableStateOf(initialHive) }
-            var scale by remember { mutableStateOf(initialScale) }
+            
+            // Upload State
+            var pendingUploadHive by remember { mutableStateOf<Arnia?>(null) }
+            var pendingUploadSettings by remember { mutableStateOf<AuthManager.ScanSettings?>(null) }
             var isUploading by remember { mutableStateOf(false) }
             var isLoggingIn by remember { mutableStateOf(false) }
             var loginError by remember { mutableStateOf<String?>(null) }
@@ -157,12 +157,10 @@ class MainActivity : ComponentActivity() {
                 if (currentScreen == MainScreen.HOME) {
                     authManager.saveSelection(
                         apiaryName = selectedApiary?.name,
-                        hiveCode = selectedHive?.code,
-                        scale = scale
+                        hiveCode = null,
+                        scale = scanSettings.scale
                     )
                 }
-                // Syncing device capabilities is disabled for now; re-enable if backend needs the data again.
-//                deviceManager.syncCapabilities()
             }
 
             val externalCameraLauncher = rememberLauncherForActivityResult(
@@ -172,6 +170,7 @@ class MainActivity : ComponentActivity() {
                     tempExternalUri?.let { pendingUploadUri = it }
                 } else {
                     tempExternalUri = null
+                    // Do not reset pendingUploadHive/Settings here, give chance to retry or let logic handle it
                 }
             }
 
@@ -240,46 +239,37 @@ class MainActivity : ComponentActivity() {
                                                 val previousSelection = authManager.loadSelection()
                                                 val matchingApiary = allApiaries.find { it.name == previousSelection.apiaryName }
                                                     ?: allApiaries.first()
-                                                val matchingHives = matchingApiary.hives
-                                                val matchingHive = matchingHives.find { it.code == previousSelection.hiveCode }
-                                                    ?: matchingHives.firstOrNull()
-
+                                                
                                                 selectedApiary = matchingApiary
-                                                hiveList = matchingHives
-                                                selectedHive = matchingHive
-                                                previousSelection.scale?.let { scale = it }
+                                                // Load persistent scan settings
+                                                scanSettings = authManager.loadScanSettings()
 
                                                 savedUsername = username
                                                 savedPassword = password
                                                 authManager.saveSelection(
                                                     apiaryName = selectedApiary?.name,
-                                                    hiveCode = selectedHive?.code,
-                                                    scale = scale
+                                                    hiveCode = null,
+                                                    scale = scanSettings.scale
                                                 )
                                                 currentScreen = MainScreen.HOME
                                             } else {
                                                 selectedApiary = null
-                                                hiveList = emptyList()
-                                                selectedHive = null
-                                                loginError =
-                                                    "Nessun dato disponibile per il profilo selezionato."
+                                                loginError = "Nessun dato disponibile per il profilo selezionato."
                                             }
                                         } else {
-                                            loginError =
-                                                "Forse hai sbagliato le credenziali di accesso, riprova o contattaci per risolvere il problema"
+                                            loginError = "Credenziali errate o problema server."
                                         }
                                     } catch (error: Exception) {
                                         if (apiaryList.isNotEmpty() && username == savedUsername && password == savedPassword) {
                                             loginError = null
                                             Toast.makeText(
                                                 context,
-                                                "Connessione non disponibile, uso i dati salvati.",
+                                                "Offline: uso i dati salvati.",
                                                 Toast.LENGTH_LONG
                                             ).show()
                                             currentScreen = MainScreen.HOME
                                         } else {
-                                            loginError =
-                                                "Forse hai sbagliato le credenziali di accesso, riprova o contattaci per risolvere il problema"
+                                            loginError = "Errore di rete: ${error.message}"
                                             Toast.makeText(
                                                 context,
                                                 "Errore di rete: ${error.message}",
@@ -301,66 +291,54 @@ class MainActivity : ComponentActivity() {
 
                         MainScreen.HOME -> HomeScreen(
                             selectedApiary = selectedApiary,
-                            selectedArnia = selectedHive,
-                            scale = scale,
+                            apiaryList = apiaryList,
+                            scanSettings = scanSettings,
                             versionName = versionName,
-                            versionCode = versionCode,
                             baseUrl = Config.API_BASE_URL,
                             loggedUsername = savedUsername,
-                            apiaryList = apiaryList,
-                            hiveList = hiveList,
-                            onExternalCamera = {
-                                if (ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.CAMERA
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    startExternalCamera()
+                            onApiarySelected = { apiary ->
+                                selectedApiary = apiary
+                                authManager.saveSelection(
+                                    apiaryName = selectedApiary?.name,
+                                    hiveCode = null,
+                                    scale = scanSettings.scale
+                                )
+                            },
+                            onScanRequest = { hive, settings, isCamera ->
+                                pendingUploadHive = hive
+                                pendingUploadSettings = settings
+                                scanSettings = settings // Update state
+                                authManager.saveScanSettings(
+                                    scale = settings.scale,
+                                    permanenceDays = settings.permanenceDays,
+                                    measureType = settings.measureType,
+                                    photosPerScan = settings.photosPerScan
+                                )
+                                
+                                if (isCamera) {
+                                    if (ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.CAMERA
+                                        ) == PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        startExternalCamera()
+                                    } else {
+                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
                                 } else {
-                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    currentScreen = MainScreen.GALLERY
                                 }
                             },
-                            onGallery = { currentScreen = MainScreen.GALLERY },
                             onShareLogs = shareLogs,
                             onLogout = {
                                 authManager.logout()
                                 apiaryList = emptyList()
-                                hiveList = emptyList()
                                 selectedApiary = null
-                                selectedHive = null
-                                scale = 1.0
                                 isLoggingIn = false
                                 isUploading = false
                                 loginError = null
-                                // preserve last username so login form stays prefilled
                                 savedPassword = ""
                                 currentScreen = MainScreen.LOGIN
-                            },
-                            onApiarySelected = { apiary ->
-                                selectedApiary = apiary
-                                hiveList = apiary.hives
-                                selectedHive = hiveList.firstOrNull()
-                                authManager.saveSelection(
-                                    apiaryName = selectedApiary?.name,
-                                    hiveCode = selectedHive?.code,
-                                    scale = scale
-                                )
-                            },
-                            onArniaSelected = { arnia ->
-                                selectedHive = arnia
-                                authManager.saveSelection(
-                                    apiaryName = selectedApiary?.name,
-                                    hiveCode = selectedHive?.code,
-                                    scale = scale
-                                )
-                            },
-                            onScaleUpdated = { newScale ->
-                                scale = newScale
-                                authManager.saveSelection(
-                                    apiaryName = selectedApiary?.name,
-                                    hiveCode = selectedHive?.code,
-                                    scale = scale
-                                )
                             }
                         )
 
@@ -374,32 +352,34 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (pendingUploadUri != null) {
+                if (pendingUploadUri != null && pendingUploadHive != null && pendingUploadSettings != null) {
+                    val hiveName = pendingUploadHive?.name
                     AlertDialog(
-                        onDismissRequest = { pendingUploadUri = null },
+                        onDismissRequest = { 
+                            pendingUploadUri = null 
+                            pendingUploadHive = null
+                        },
                         title = { Text(text = "Conferma Invio") },
-                        text = { Text(text = "Vuoi inviare la foto al server?") },
+                        text = { Text(text = "Vuoi inviare la foto per l'arnia '$hiveName'?") },
                         confirmButton = {
                             TextButton(
                                 onClick = {
                                     val uri = pendingUploadUri
-                                    val hive = selectedHive
-                                    if (uri != null && hive != null) {
+                                    val hive = pendingUploadHive
+                                    val settings = pendingUploadSettings
+                                    if (uri != null && hive != null && settings != null) {
                                         pendingUploadUri = null
                                         isUploading = true
                                         uploadPhoto(
                                             context = context,
                                             uri = uri,
                                             hive = hive,
-                                            scale = scale,
-                                            onComplete = { isUploading = false }
+                                            settings = settings,
+                                            onComplete = { 
+                                                isUploading = false 
+                                                pendingUploadHive = null // Reset after upload
+                                            }
                                         )
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Seleziona un'arnia prima di caricare una foto.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
                                     }
                                 }
                             ) {
@@ -407,7 +387,10 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { pendingUploadUri = null }) {
+                            TextButton(onClick = { 
+                                pendingUploadUri = null 
+                                pendingUploadHive = null
+                            }) {
                                 Text("No", color = Color.Gray)
                             }
                         },
@@ -450,7 +433,7 @@ class MainActivity : ComponentActivity() {
         context: Context,
         uri: Uri,
         hive: Arnia,
-        scale: Double,
+        settings: AuthManager.ScanSettings,
         onComplete: () -> Unit
     ) {
         val username = authManager.getUsername()
@@ -492,15 +475,15 @@ class MainActivity : ComponentActivity() {
                     "arniaId" to hive.code.toRequestBody(textMediaType),
                     "note" to "Foto scattata il ${SimpleDateFormat("dd MMMM yyyy HH:mm", Locale.ITALY).format(now)}"
                         .toRequestBody(textMediaType),
-                    "ScaleforConta" to String.format(Locale.US, "%.2f", scale)
+                    "ScaleforConta" to String.format(Locale.US, "%.2f", settings.scale)
                         .toRequestBody(textMediaType),
                     "timestamp" to timestampFormat.format(now).replace(":", "-")
                         .toRequestBody(textMediaType),
                     "GPS" to "45.0352891,7.5168128".toRequestBody(textMediaType),
-                    "NumeroGGPermanenza" to "0".toRequestBody(textMediaType),
+                    "NumeroGGPermanenza" to settings.permanenceDays.toString().toRequestBody(textMediaType),
                     "data_prelievo_data" to dateFormat.format(now).toRequestBody(textMediaType),
                     "data_prelievo_time" to timeFormat.format(now).toRequestBody(textMediaType),
-                    "tipo_misura" to "CadutaNaturale".toRequestBody(textMediaType)
+                    "tipo_misura" to settings.measureType.toRequestBody(textMediaType)
                 )
 
                 val response = apiRepository.uploadFoto(params, body)

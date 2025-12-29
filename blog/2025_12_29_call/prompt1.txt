@@ -1,0 +1,41 @@
+Ora vorrei cambiare la navigazione dell'app, nella Home si vedono le arnie, sempre e comunque.
+
+Quindi:
+
+Home page, si apre subito con la lista delle arnie.
+Una lista bella e corposa.
+Per ogni arnia mostra una card con l'ID, la data prelievo come ora è implementata, cioè che sia human-readable.
+
+Non esiste più come ora la selezione e poi il singolo tasto.
+Al tap sulla singola arnia cambia lo stile, quindi si vede che la card ha ricevuto un evento di tap.
+Al tap si apre una dialog divisa in due parti. 
+La parte alta mostra i parametri da leggere ed impostare.
+Ovviamente questi parameteri hanno persistenza e questi campi mostrano sempre l'utlimo valore impostato:
+
+- fattore di scala (un float , all'inizio è 1.0)
+- gg permanenza (un integer, all'inizio è 1)
+- tipo misura (`caduta naturale` oppure `trattamento`) 
+- numero di foto per scansione (un integer, all'inizio è 1)
+
+Il campo che cambia ogni volta è:
+
+- data prelievo che viene impostata al datetime corrente
+
+La parte bassa della dialog mostra due bei tastoni con delle icone, un tastone  per aprire la camera ed un tastone per aprire la gallery. sono i due tasti che sono presenti ora nella home. ma d'ora in avanti compariranno in questa dialog intermedia tra il Tap sull'arnia e la presa effettiva della foto.
+
+Al termine della foto si torna nella home. nella home ricorda che si trova la lista delle arnie.
+
+Torniamo alla home, come cambiamo l'utente (nel caso dei delegati) e l'apiario selezionati?
+L'idea è di avere un drawer, un pannello sulla sinistra, che si possa aprire e mostri in modo gerarchico gli utenti, sotto ogni utente la sua lista di alveari. L'utente fa il tap sull'alveare e quindi la home si aggiorna e mostra la lista di arnie.
+
+Nella home il titolo è l'alveare selezionato.
+
+Dove mostriamo il nome utente?
+Possiamo creare una icona settings in alto a destra. Quando l'utente fa tap su questa icona, si apre un drawer a destra che mostra:
+- nome utente connesso
+- base url del server
+- versione
+- tasto per share-log
+In alto a questo drawer mostriamo il tasto di logout
+
+Vai!

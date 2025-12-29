@@ -57,16 +57,39 @@ class AuthManager(context: Context) {
             .apply()
     }
 
+    fun saveScanSettings(
+        scale: Double,
+        permanenceDays: Int,
+        measureType: String,
+        photosPerScan: Int
+    ) {
+        sharedPreferences.edit()
+            .putFloat(KEY_SELECTED_SCALE, scale.toFloat())
+            .putInt(KEY_PERMANENCE_DAYS, permanenceDays)
+            .putString(KEY_MEASURE_TYPE, measureType)
+            .putInt(KEY_PHOTOS_PER_SCAN, photosPerScan)
+            .apply()
+    }
+
     fun loadSelection(): SelectionSnapshot {
         val scale = if (sharedPreferences.contains(KEY_SELECTED_SCALE)) {
             sharedPreferences.getFloat(KEY_SELECTED_SCALE, DEFAULT_SCALE.toFloat()).toDouble()
         } else {
-            null
+            DEFAULT_SCALE
         }
         return SelectionSnapshot(
             apiaryName = sharedPreferences.getString(KEY_SELECTED_APIARY_NAME, null),
             hiveCode = sharedPreferences.getString(KEY_SELECTED_HIVE_CODE, null),
             scale = scale
+        )
+    }
+
+    fun loadScanSettings(): ScanSettings {
+        return ScanSettings(
+            scale = sharedPreferences.getFloat(KEY_SELECTED_SCALE, DEFAULT_SCALE.toFloat()).toDouble(),
+            permanenceDays = sharedPreferences.getInt(KEY_PERMANENCE_DAYS, 1),
+            measureType = sharedPreferences.getString(KEY_MEASURE_TYPE, "CadutaNaturale") ?: "CadutaNaturale",
+            photosPerScan = sharedPreferences.getInt(KEY_PHOTOS_PER_SCAN, 1)
         )
     }
 
@@ -82,6 +105,13 @@ class AuthManager(context: Context) {
         val scale: Double?
     )
 
+    data class ScanSettings(
+        val scale: Double,
+        val permanenceDays: Int,
+        val measureType: String,
+        val photosPerScan: Int
+    )
+
     private companion object {
         private const val KEY_USER = "user"
         private const val KEY_PASS = "pass"
@@ -89,6 +119,11 @@ class AuthManager(context: Context) {
         private const val KEY_SELECTED_APIARY_NAME = "selected_apiary_name"
         private const val KEY_SELECTED_HIVE_CODE = "selected_hive_code"
         private const val KEY_SELECTED_SCALE = "selected_scale"
+        
+        private const val KEY_PERMANENCE_DAYS = "permanence_days"
+        private const val KEY_MEASURE_TYPE = "measure_type"
+        private const val KEY_PHOTOS_PER_SCAN = "photos_per_scan"
+        
         private const val DEFAULT_SCALE = 1.0
     }
 }
