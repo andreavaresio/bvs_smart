@@ -6,15 +6,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.Hive
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
@@ -63,6 +68,7 @@ fun HomeScreen(
     apiaryList: List<Apiary>,
     scanSettings: AuthManager.ScanSettings,
     versionName: String,
+    versionCode: Int,
     baseUrl: String,
     loggedUsername: String,
     onApiarySelected: (Apiary) -> Unit,
@@ -76,10 +82,6 @@ fun HomeScreen(
     
     var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
 
-    // Logic for Nested Drawers
-    // Outer Drawer = Left (Navigation)
-    // Inner Drawer = Right (Settings) - We simulate Right Drawer by using CompositionLocalProvider to flip direction temporarily
-    
     ModalNavigationDrawer(
         drawerState = leftDrawerState,
         drawerContent = {
@@ -95,19 +97,17 @@ fun HomeScreen(
             }
         }
     ) {
-        // To implement a Right Drawer with standard Material3, we wrap the content in another ModalNavigationDrawer
-        // and flip the LayoutDirection for the drawer itself.
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             ModalNavigationDrawer(
                 drawerState = rightDrawerState,
                 drawerContent = {
-                    // Reset direction for content inside the right drawer
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         ModalDrawerSheet {
                             SettingsDrawerContent(
                                 username = loggedUsername,
                                 baseUrl = baseUrl,
                                 versionName = versionName,
+                                versionCode = versionCode,
                                 onShareLogs = onShareLogs,
                                 onLogout = onLogout
                             )
@@ -115,7 +115,6 @@ fun HomeScreen(
                     }
                 }
             ) {
-                // Reset direction for the main content
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Scaffold(
                         topBar = {
@@ -172,7 +171,6 @@ fun HomeScreen(
         }
     }
 
-    // Dialog handling
     if (showScanDialogForHive != null) {
         val targetHive = showScanDialogForHive!!
         ScanDialog(
@@ -194,37 +192,60 @@ fun HiveCard(hive: Arnia, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(24.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(YellowPrimary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Hive,
+                    contentDescription = null,
+                    tint = Color(0xFFF57F17),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = hive.name,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = hive.code,
                     fontSize = 12.sp,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1
                 )
             }
-            
+
             TimeUtils.getRelativeTimeDisplay(hive.lastSampleDate)?.let { dateDisplay ->
-                Text(
-                    text = dateDisplay,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
-                )
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFFEEEEEE), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = dateDisplay,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF616161)
+                    )
+                }
             }
         }
     }

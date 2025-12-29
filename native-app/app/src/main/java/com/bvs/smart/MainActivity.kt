@@ -294,6 +294,7 @@ class MainActivity : ComponentActivity() {
                             apiaryList = apiaryList,
                             scanSettings = scanSettings,
                             versionName = versionName,
+                            versionCode = versionCode,
                             baseUrl = Config.API_BASE_URL,
                             loggedUsername = savedUsername,
                             onApiarySelected = { apiary ->

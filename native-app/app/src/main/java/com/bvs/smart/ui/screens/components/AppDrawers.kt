@@ -145,6 +145,7 @@ fun SettingsDrawerContent(
     username: String,
     baseUrl: String,
     versionName: String,
+    versionCode: Int,
     onShareLogs: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -174,7 +175,26 @@ fun SettingsDrawerContent(
         )
 
         SettingItem(label = "Utente Connesso", value = username)
-        SettingItem(label = "Versione App", value = versionName)
+        
+        // Version Item
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            Text(text = "Versione App", fontSize = 12.sp, color = TextSecondary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "$versionCode ",
+                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "($versionName)",
+                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
         SettingItem(label = "Server API", value = baseUrl)
 
         Spacer(modifier = Modifier.weight(1f))
