@@ -82,40 +82,48 @@ fun HomeScreen(
     
     var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
 
-    ModalNavigationDrawer(
-        drawerState = leftDrawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                NavigationDrawerContent(
-                    apiaryList = apiaryList,
-                    selectedApiary = selectedApiary,
-                    onApiarySelected = {
-                        onApiarySelected(it)
-                        scope.launch { leftDrawerState.close() }
+    // Logic for Nested Drawers
+    // We nest the LEFT drawer INSIDE the RIGHT drawer to try and allow swipe gestures for both.
+    // Inner consumes start-drag first (Left edge). Outer consumes end-drag (Right edge) potentially.
+    
+    // Outer: Right Drawer (Settings)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        ModalNavigationDrawer(
+            drawerState = rightDrawerState,
+            drawerContent = {
+                // Reset direction for content inside the right drawer
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    ModalDrawerSheet {
+                        SettingsDrawerContent(
+                            username = loggedUsername,
+                            baseUrl = baseUrl,
+                            versionName = versionName,
+                            versionCode = versionCode,
+                            onShareLogs = onShareLogs,
+                            onLogout = onLogout
+                        )
                     }
-                )
+                }
             }
-        }
-    ) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            ModalNavigationDrawer(
-                drawerState = rightDrawerState,
-                drawerContent = {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        ) {
+            // Inner: Left Drawer (Navigation) - Reset direction to LTR for this drawer context
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                ModalNavigationDrawer(
+                    drawerState = leftDrawerState,
+                    drawerContent = {
                         ModalDrawerSheet {
-                            SettingsDrawerContent(
-                                username = loggedUsername,
-                                baseUrl = baseUrl,
-                                versionName = versionName,
-                                versionCode = versionCode,
-                                onShareLogs = onShareLogs,
-                                onLogout = onLogout
+                            NavigationDrawerContent(
+                                apiaryList = apiaryList,
+                                selectedApiary = selectedApiary,
+                                onApiarySelected = {
+                                    onApiarySelected(it)
+                                    scope.launch { leftDrawerState.close() }
+                                }
                             )
                         }
                     }
-                }
-            ) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                ) {
+                    // Content: Scaffold
                     Scaffold(
                         topBar = {
                             TopAppBar(
@@ -146,22 +154,31 @@ fun HomeScreen(
                         },
                         containerColor = AppBackground
                     ) { paddingValues ->
-                        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                            if (selectedApiary == null || selectedApiary.hives.isEmpty()) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Nessuna arnia disponibile", color = TextSecondary)
-                                }
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    items(selectedApiary.hives) { hive ->
-                                        HiveCard(
-                                            hive = hive,
-                                            onClick = { showScanDialogForHive = hive }
-                                        )
-                                    }
+                        if (selectedApiary == null || selectedApiary.hives.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(paddingValues)
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Nessuna arnia disponibile", color = TextSecondary)
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                    top = paddingValues.calculateTopPadding() + 16.dp,
+                                    bottom = 32.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(selectedApiary.hives) { hive ->
+                                    HiveCard(
+                                        hive = hive,
+                                        onClick = { showScanDialogForHive = hive }
+                                    )
                                 }
                             }
                         }
