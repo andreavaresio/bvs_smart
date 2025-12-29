@@ -1,13 +1,13 @@
 package com.bvs.smart.ui.screens.components
 
 import android.media.MediaActionSound
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -45,6 +46,9 @@ fun BeeDanceScreen(onExit: () -> Unit) {
     val beeSize = 64.dp
     val density = LocalDensity.current
 
+    // Handle system back button to exit the game
+    BackHandler(onBack = onExit)
+
     val actionSound = remember {
         MediaActionSound().apply {
             load(MediaActionSound.FOCUS_COMPLETE)
@@ -66,7 +70,13 @@ fun BeeDanceScreen(onExit: () -> Unit) {
         val speedPx = with(density) { 180.dp.toPx() }
         val minSpeed = speedPx * 0.4f
 
-        data class Bee(val position: Offset, val velocity: Offset)
+        data class Bee(
+            val position: Offset, 
+            val velocity: Offset,
+            val scale: Float = 1f,
+            val animationTime: Float = 0f, // Time accumulated for animation
+            val isAnimating: Boolean = false
+        )
 
         fun randomVelocity(): Offset {
             val angle = Random.nextDouble(0.0, PI * 2)
@@ -106,6 +116,7 @@ fun BeeDanceScreen(onExit: () -> Unit) {
 
                     val snapshot = bees.toList()
                     snapshot.forEachIndexed { index, bee ->
+                        // 1. Movement Physics
                         var newPos = Offset(
                             x = bee.position.x + bee.velocity.x * deltaSeconds,
                             y = bee.position.y + bee.velocity.y * deltaSeconds
@@ -137,7 +148,41 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                             bounced = true
                         }
 
-                        val updatedBee = Bee(newPos, newVel)
+                        // 2. Animation Logic (Pulse)
+                        var newScale = bee.scale
+                        var newAnimTime = bee.animationTime
+                        var newIsAnimating = bee.isAnimating
+
+                        if (bee.isAnimating) {
+                            newAnimTime += deltaSeconds
+                            // Full cycle duration approx 0.6 seconds
+                            // Formula: 1.0 - 0.3 * sin(time * speed)
+                            // Phase 1: 0 -> PI (Shrink) -> PI -> 2PI (Grow back)
+                            val cycleDuration = 0.6f
+                            val progress = (newAnimTime / cycleDuration) * (2 * PI).toFloat()
+                            
+                            if (newAnimTime >= cycleDuration) {
+                                newIsAnimating = false
+                                newScale = 1f
+                                newAnimTime = 0f
+                            } else {
+                                // Shrink then Grow: Start from 1, go down to 0.7, go up to 1.3, back to 1
+                                // Let's simplify: simple sine wave 1.0 -> 0.5 -> 1.5 -> 1.0?
+                                // "prima diminuisce e poi aumenta e poi ritorna uguale"
+                                // We want scale < 1 first. sin(0) = 0. sin(PI) = 0.
+                                // -sin(x) starts going negative (shrink).
+                                newScale = 1f - (0.4f * sin(progress)).toFloat()
+                            }
+                        }
+
+                        val updatedBee = bee.copy(
+                            position = newPos, 
+                            velocity = newVel,
+                            scale = newScale,
+                            animationTime = newAnimTime,
+                            isAnimating = newIsAnimating
+                        )
+                        
                         if (index < bees.size) {
                             bees[index] = updatedBee
                         }
@@ -155,13 +200,23 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                 .fillMaxSize()
                 .pointerInput(bees.size, maxWidthPx, maxHeightPx) {
                     detectTapGestures { tapOffset ->
+                        // Check if an existing bee was tapped
                         val tappedIndex = bees.indexOfFirst { bee ->
                             tapOffset.x >= bee.position.x &&
                                 tapOffset.x <= bee.position.x + beeSizePx &&
                                 tapOffset.y >= bee.position.y &&
                                 tapOffset.y <= bee.position.y + beeSizePx
                         }
+
                         if (tappedIndex >= 0) {
+                            // Tapped a bee -> Animate it!
+                            val bee = bees[tappedIndex]
+                            if (!bee.isAnimating) {
+                                bees[tappedIndex] = bee.copy(isAnimating = true, animationTime = 0f)
+                                actionSound.play(MediaActionSound.SHUTTER_CLICK)
+                            }
+                        } else {
+                            // Tapped empty space -> Spawn new bee
                             val startPos = clampPosition(
                                 Offset(
                                     x = tapOffset.x - beeSizePx / 2f,
@@ -170,8 +225,6 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                             )
                             bees.add(Bee(startPos, randomVelocity()))
                             actionSound.play(MediaActionSound.SHUTTER_CLICK)
-                        } else {
-                            onExit()
                         }
                     }
                 }
@@ -198,9 +251,11 @@ fun BeeDanceScreen(onExit: () -> Unit) {
                 Text(
                     text = "🐝",
                     fontSize = 48.sp,
-                    modifier = Modifier.offset {
-                        IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
-                    }
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(bee.position.x.roundToInt(), bee.position.y.roundToInt())
+                        }
+                        .scale(bee.scale) // Apply scale animation
                 )
             }
         }
