@@ -19,27 +19,17 @@ Interfaccia:
 - Mostrare la data dell'ultima scansione. Magari con un colore diverso se hai appena effettuato delle scansioni
 - Nella sessione vanno impostatiu dei parametri
 
-### Permanenza
+Multifoto
 
-Lo imposti la prima volta. Un numero float / quanti sono i gg di permanenza. Dopo che lo imposti, rimane sempre quel valore.
+- Un po` un casino, nella stessa chiamata POST vanno mandate al server più foto.
 
-### Multi foto
 
-Disacoppiare il numero di foto da fare per la singola scansione.
-Seleziono giorni di permanenza e quante foto per ogni scansione
-
-La singola POST contiene tutte le foto di quella scansione.
 
 ### Home e navigazione
 
 Vedi le arnie dell'apioario che hai scelto.
 
 Altrimenti ritorni nel picker principale, utente > apiario > alveare
-
-Fattore di scala
-Tipo di scansione: caduta naturale, trattamento
-Giorni di permanenza
-Multifoto
 
 ### Risoluzione
 
