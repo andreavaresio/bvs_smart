@@ -128,10 +128,19 @@ fun HomeScreen(
                         topBar = {
                             TopAppBar(
                                 title = {
+                                    val titleText = remember(selectedApiary) {
+                                        if (selectedApiary != null) {
+                                            val owner = selectedApiary.ownerName ?: "Utente"
+                                            "$owner / ${selectedApiary.name}"
+                                        } else {
+                                            "Seleziona Apiario"
+                                        }
+                                    }
                                     Text(
-                                        text = selectedApiary?.name ?: "Seleziona Apiario",
+                                        text = titleText,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
+                                        fontSize = 16.sp, // Slightly smaller to fit both names
+                                        maxLines = 1
                                     )
                                 },
                                 navigationIcon = {
