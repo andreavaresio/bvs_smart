@@ -210,7 +210,7 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     val ownerSuffix = if (hasMultipleOwners) selectedApiary?.ownerName?.let { " ($it)" } ?: "" else ""
                                     Text(
                                         text = "${hive.name}$ownerSuffix",
@@ -226,8 +226,10 @@ fun HomeScreen(
                                 hive.lastSampleDate?.takeIf { it.isNotBlank() }?.let {
                                     Text(
                                         text = it.substringBefore('T'),
-                                        color = TextSecondary,
-                                        fontSize = 12.sp
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.padding(start = 8.dp)
                                     )
                                 }
                             }
