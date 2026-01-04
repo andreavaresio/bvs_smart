@@ -11,6 +11,10 @@ object TimeUtils {
 
     fun getRelativeTimeDisplay(dateString: String?): String? {
         if (dateString.isNullOrBlank()) return null
+        
+        if (dateString.equals("INPROGRESS", ignoreCase = true)) {
+            return "In corso..."
+        }
 
         try {
             // ISO 8601 format (e.g., 2025-12-29T08:55:00.000000Z)

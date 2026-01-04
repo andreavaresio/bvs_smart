@@ -269,6 +269,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val launchExternalCamera: () -> Unit = {
+                try {
+                    val intent = Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Impossibile aprire la fotocamera", Toast.LENGTH_SHORT).show()
+                }
+            }
+
             Box(modifier = Modifier.fillMaxSize()) {
                 Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
@@ -567,6 +576,10 @@ class MainActivity : ComponentActivity() {
                                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                 }
                             }
+                        },
+                        onExternalCamera = {
+                            showSourceDialog = false
+                            launchExternalCamera()
                         },
                         onGallery = {
                             showSourceDialog = false
