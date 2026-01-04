@@ -92,6 +92,24 @@ class AuthManager(context: Context) {
             photosPerScan = sharedPreferences.getInt(KEY_PHOTOS_PER_SCAN, 1)
         )
     }
+    
+    fun saveHiveLocation(hiveCode: String, lat: Double, lon: Double) {
+        sharedPreferences.edit()
+            .putString("location_$hiveCode", "$lat,$lon")
+            .apply()
+    }
+
+    fun getHiveLocation(hiveCode: String): Location? {
+        val locString = sharedPreferences.getString("location_$hiveCode", null) ?: return null
+        return try {
+            val parts = locString.split(",")
+            if (parts.size == 2) {
+                Location(parts[0].toDouble(), parts[1].toDouble())
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     fun hasCredentials(): Boolean = getUsername() != null && getPassword() != null
 
@@ -104,6 +122,8 @@ class AuthManager(context: Context) {
         val hiveCode: String?,
         val scale: Double?
     )
+    
+    data class Location(val lat: Double, val lon: Double)
 
     data class ScanSettings(
         val scale: Double,

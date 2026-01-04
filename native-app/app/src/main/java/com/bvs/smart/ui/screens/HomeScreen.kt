@@ -17,7 +17,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Hive
 import androidx.compose.material3.Card
@@ -79,7 +81,15 @@ fun HomeScreen(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onApiarySelected: (Apiary) -> Unit,
-    onScanRequest: (Arnia, AuthManager.ScanSettings) -> Unit,
+    // Scan & Location Props
+    showScanDialogForHive: Arnia?,
+    onShowScanDialog: (Arnia?) -> Unit,
+    getHiveLocation: (String) -> AuthManager.Location?,
+    onMapRequest: () -> Unit,
+    onCurrentLocationRequest: () -> Unit,
+    onScanRequest: (Arnia, AuthManager.ScanSettings, Double?, Double?) -> Unit,
+    onOpenMap: (Double, Double, String) -> Unit,
+    
     onShareLogs: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -104,7 +114,6 @@ fun HomeScreen(
         }
     }
     
-    var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Logic for Nested Drawers
@@ -177,6 +186,15 @@ fun HomeScreen(
                                     }
                                 },
                                 actions = {
+                                    // Apiary Map Icon
+                                    if (selectedApiary?.latitude != null && selectedApiary.longitude != null) {
+                                        IconButton(onClick = { 
+                                            onOpenMap(selectedApiary.latitude, selectedApiary.longitude, selectedApiary.name) 
+                                        }) {
+                                            Icon(Icons.Default.Map, contentDescription = "Mappa Apiario")
+                                        }
+                                    }
+                                    
                                     IconButton(onClick = { scope.launch { rightDrawerState.open() } }) {
                                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                                     }
@@ -215,7 +233,9 @@ fun HomeScreen(
                                     items(selectedApiary.hives) { hive ->
                                         HiveCard(
                                             hive = hive,
-                                            onClick = { showScanDialogForHive = hive }
+                                            getHiveLocation = getHiveLocation,
+                                            onClick = { onShowScanDialog(hive) },
+                                            onOpenMap = onOpenMap
                                         )
                                     }
                                 }
@@ -235,14 +255,20 @@ fun HomeScreen(
     }
 
     if (showScanDialogForHive != null) {
-        val targetHive = showScanDialogForHive!!
+        val targetHive = showScanDialogForHive
+        val savedLoc = remember(targetHive) { getHiveLocation(targetHive.code) }
+        
         ScanDialog(
             hive = targetHive,
             initialSettings = scanSettings,
-            onDismiss = { showScanDialogForHive = null },
-            onConfirm = { newSettings ->
-                showScanDialogForHive = null
-                onScanRequest(targetHive, newSettings)
+            initialLat = savedLoc?.lat,
+            initialLon = savedLoc?.lon,
+            onDismiss = { onShowScanDialog(null) },
+            onMapRequest = onMapRequest,
+            onCurrentLocationRequest = onCurrentLocationRequest,
+            onConfirm = { newSettings, lat, lon ->
+                onShowScanDialog(null)
+                onScanRequest(targetHive, newSettings, lat, lon)
             }
         )
     }
@@ -261,7 +287,16 @@ fun HomeScreen(
 }
 
 @Composable
-fun HiveCard(hive: Arnia, onClick: () -> Unit) {
+fun HiveCard(
+    hive: Arnia, 
+    getHiveLocation: (String) -> AuthManager.Location?,
+    onClick: () -> Unit,
+    onOpenMap: (Double, Double, String) -> Unit
+) {
+    // Resolve location: Use local sticky location if available
+    val localLoc = remember(hive) { getHiveLocation(hive.code) }
+    val hasLocation = localLoc != null
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -306,6 +341,20 @@ fun HiveCard(hive: Arnia, onClick: () -> Unit) {
                     color = TextSecondary,
                     maxLines = 1
                 )
+            }
+
+            // Sticky Map Icon (only if sticky location is set)
+            if (hasLocation) {
+                IconButton(
+                    onClick = { onOpenMap(localLoc!!.lat, localLoc.lon, hive.name) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = "Posizione Arnia",
+                        tint = YellowPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
             }
 
             TimeUtils.getRelativeTimeDisplay(hive.lastSampleDate)?.let { dateDisplay ->

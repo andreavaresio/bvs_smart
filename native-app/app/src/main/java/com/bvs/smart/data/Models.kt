@@ -21,7 +21,9 @@ data class Apiary(
 data class Arnia(
     @SerializedName("nome") val name: String,
     @SerializedName("codice") val code: String,
-    @SerializedName("data_prelievo") val lastSampleDate: String?
+    @SerializedName("data_prelievo") val lastSampleDate: String?,
+    @SerializedName("latitude") val latitude: Double?,
+    @SerializedName("longitude") val longitude: Double?
 )
 
 data class DeviceCapabilities(

@@ -52,8 +52,10 @@ import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
 import com.bvs.smart.ui.screens.LoginScreen
+import com.bvs.smart.ui.screens.MapPickerScreen
 import com.bvs.smart.ui.screens.ScanSessionScreen
 import com.bvs.smart.ui.screens.SourceSelectionDialog
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,7 +74,8 @@ private enum class MainScreen {
     LOGIN,
     HOME,
     GALLERY,
-    SCAN_SESSION
+    SCAN_SESSION,
+    MAP_PICKER
 }
 
 class MainActivity : ComponentActivity() {
@@ -129,11 +132,18 @@ class MainActivity : ComponentActivity() {
             var apiaryList by remember { mutableStateOf(initialApiaries) }
             var selectedApiary by remember { mutableStateOf(initialApiary) }
             
-            // Session State
+            // Session & Navigation State
             var currentSessionHive by remember { mutableStateOf<Arnia?>(null) }
+            // Use this to track if we are picking location for a specific hive
+            var pendingScanHive by remember { mutableStateOf<Arnia?>(null) } 
+            
+            // This state controls the visibility of the Scan Dialog on Home Screen
+            var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
+            
             var currentSessionPhotos by remember { mutableStateOf<List<Uri?>>(emptyList()) }
             var activeSlotIndex by remember { mutableStateOf<Int?>(null) }
             var showSourceDialog by remember { mutableStateOf(false) }
+            var currentHiveLocation by remember { mutableStateOf<AuthManager.Location?>(null) }
 
             var isUploading by remember { mutableStateOf(false) }
             var isLoggingIn by remember { mutableStateOf(false) }
@@ -212,6 +222,31 @@ class MainActivity : ComponentActivity() {
                     startCameraForSlot(activeSlotIndex!!)
                 } else {
                     Toast.makeText(context, "Permesso fotocamera negato", Toast.LENGTH_LONG).show()
+                }
+            }
+            
+            val locationPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                val fine = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+                val coarse = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+                if (fine || coarse) {
+                     // Permission granted, try getting location again
+                     getCurrentLocation { lat, lon ->
+                         val hive = showScanDialogForHive ?: return@getCurrentLocation
+                         authManager.saveHiveLocation(hive.code, lat, lon)
+                         // Force refresh of dialog by re-setting?
+                         // The dialog reads from AuthManager via HomeScreen params or we should update state.
+                         // HomeScreen uses: remember(targetHive) { getHiveLocation(targetHive.code) }
+                         // If we save to authManager, HomeScreen recomposition might not catch it unless we force it.
+                         // But for now, user will see it next time or if we update the dialog state.
+                         // Actually, we can update a local state variable in HomeScreen or pass it.
+                         // Let's assume onConfirm will use the updated values if they re-open?
+                         // For immediate feedback, we might need a state variable.
+                         Toast.makeText(context, "Posizione acquisita. Riapri la dialog per vedere.", Toast.LENGTH_SHORT).show()
+                     }
+                } else {
+                    Toast.makeText(context, "Permesso posizione negato", Toast.LENGTH_LONG).show()
                 }
             }
 
@@ -352,7 +387,51 @@ class MainActivity : ComponentActivity() {
                                         scale = scanSettings.scale
                                     )
                                 },
-                                onScanRequest = { hive, settings ->
+                                showScanDialogForHive = showScanDialogForHive,
+                                onShowScanDialog = { hive -> showScanDialogForHive = hive },
+                                getHiveLocation = { hiveCode -> authManager.getHiveLocation(hiveCode) },
+                                onMapRequest = {
+                                    // Navigate to Map Picker
+                                    // IMPORTANT: We keep showScanDialogForHive set, but we change screen
+                                    // When we return, ScanDialog should be visible again (if HomeScreen logic holds)
+                                    // We set pendingScanHive to current dialog target
+                                    pendingScanHive = showScanDialogForHive
+                                    currentScreen = MainScreen.MAP_PICKER
+                                },
+                                onCurrentLocationRequest = {
+                                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                        getCurrentLocation { lat, lon ->
+                                            val hive = showScanDialogForHive
+                                            if (hive != null) {
+                                                authManager.saveHiveLocation(hive.code, lat, lon)
+                                                // Trigger update? Dialog reads from AuthManager on recomposition.
+                                                // We might need to close and reopen or use a state holder.
+                                                // For now, let's just toast and let the user see it next time or 
+                                                // force recomposition by toggling showScanDialogForHive?
+                                                // A simple way is:
+                                                showScanDialogForHive = null
+                                                scope.launch { 
+                                                    kotlinx.coroutines.delay(100)
+                                                    showScanDialogForHive = hive 
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                        )
+                                    }
+                                },
+                                onScanRequest = { hive, settings, lat, lon ->
+                                    // Save Location if provided
+                                    if (lat != null && lon != null) {
+                                        authManager.saveHiveLocation(hive.code, lat, lon)
+                                        currentHiveLocation = AuthManager.Location(lat, lon)
+                                    } else {
+                                        currentHiveLocation = null
+                                    }
+                                    
                                     // Prepare Session
                                     currentSessionHive = hive
                                     scanSettings = settings
@@ -364,6 +443,16 @@ class MainActivity : ComponentActivity() {
                                     )
                                     
                                     currentScreen = MainScreen.SCAN_SESSION
+                                },
+                                onOpenMap = { lat, lon, label ->
+                                    try {
+                                        val uri = Uri.parse("geo:$lat,$lon?q=$lat,$lon($label)")
+                                        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+                                        // mapIntent.setPackage("com.google.android.apps.maps") // Optional: force Google Maps
+                                        context.startActivity(mapIntent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Nessuna app di mappe trovata", Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 onShareLogs = shareLogs,
                                 onLogout = {
@@ -402,6 +491,7 @@ class MainActivity : ComponentActivity() {
                                                 uris = validUris,
                                                 hive = hive,
                                                 settings = scanSettings,
+                                                location = currentHiveLocation,
                                                 onComplete = { 
                                                     isUploading = false 
                                                     currentScreen = MainScreen.HOME // Go back home after upload
@@ -428,6 +518,34 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = MainScreen.SCAN_SESSION
                                 },
                                 onBack = { currentScreen = MainScreen.SCAN_SESSION }
+                            )
+                        }
+                        
+                        MainScreen.MAP_PICKER -> {
+                            BackHandler { currentScreen = MainScreen.HOME }
+                            val targetHive = pendingScanHive
+                            val savedLoc = if (targetHive != null) authManager.getHiveLocation(targetHive.code) else null
+                            
+                            // Default to Torino or current saved location
+                            val initialLat = savedLoc?.lat ?: 45.0703
+                            val initialLon = savedLoc?.lon ?: 7.6869
+                            
+                            MapPickerScreen(
+                                initialLat = initialLat,
+                                initialLon = initialLon,
+                                onConfirmLocation = { lat, lon ->
+                                    if (targetHive != null) {
+                                        authManager.saveHiveLocation(targetHive.code, lat, lon)
+                                    }
+                                    // Return to Home and ensure dialog shows updated values
+                                    currentScreen = MainScreen.HOME
+                                    // Trigger refresh of dialog
+                                    showScanDialogForHive = null
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(100)
+                                        showScanDialogForHive = targetHive
+                                    }
+                                }
                             )
                         }
                     }
@@ -484,6 +602,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun getCurrentLocation(onLocationFound: (Double, Double) -> Unit) {
+        try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        onLocationFound(location.latitude, location.longitude)
+                    } else {
+                        Toast.makeText(this, "Posizione non disponibile", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Errore posizione: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun createPhotoFile(context: Context): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
@@ -495,6 +633,7 @@ class MainActivity : ComponentActivity() {
         uris: List<Uri>,
         hive: Arnia,
         settings: AuthManager.ScanSettings,
+        location: AuthManager.Location?,
         onComplete: () -> Unit
     ) {
         val username = authManager.getUsername()
@@ -526,6 +665,9 @@ class MainActivity : ComponentActivity() {
                 val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss.SSS'Z'", Locale.US)
                 val textMediaType = "text/plain".toMediaTypeOrNull()
 
+                // Use dynamic location if available, otherwise fallback to default
+                val gpsString = if (location != null) "${location.lat},${location.lon}" else "45.0352891,7.5168128"
+
                 val params: Map<String, RequestBody> = mapOf(
                     "username" to username.toRequestBody(textMediaType),
                     "password" to password.toRequestBody(textMediaType),
@@ -534,17 +676,12 @@ class MainActivity : ComponentActivity() {
                         .toRequestBody(textMediaType),
                     "ScaleforConta" to String.format(Locale.US, "%.2f", settings.scale).toRequestBody(textMediaType),
                     "timestamp" to timestampFormat.format(now).replace(":", "-").toRequestBody(textMediaType),
-                    "GPS" to "45.0352891,7.5168128".toRequestBody(textMediaType),
+                    "GPS" to gpsString.toRequestBody(textMediaType),
                     "NumeroGGPermanenza" to settings.permanenceDays.toString().toRequestBody(textMediaType),
                     "data_prelievo_data" to dateFormat.format(now).toRequestBody(textMediaType),
                     "data_prelievo_time" to timeFormat.format(now).toRequestBody(textMediaType),
                     "tipo_misura" to settings.measureType.toRequestBody(textMediaType)
                 )
-
-                // Call API (Need to update ApiService to accept List<MultipartBody.Part>?)
-                // Current ApiService expects @Part file: MultipartBody.Part. 
-                // We need to change it to accept List. But wait, ApiRepository/ApiService signature needs update.
-                // For now, let's assume we update ApiRepository next.
                 
                 val response = apiRepository.uploadFotoMulti(params, fileParts)
 

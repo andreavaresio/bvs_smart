@@ -14,13 +14,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -53,13 +55,21 @@ import java.util.Locale
 fun ScanDialog(
     hive: Arnia,
     initialSettings: AuthManager.ScanSettings,
+    initialLat: Double?,
+    initialLon: Double?,
     onDismiss: () -> Unit,
-    onConfirm: (AuthManager.ScanSettings) -> Unit
+    onMapRequest: () -> Unit,
+    onCurrentLocationRequest: () -> Unit,
+    onConfirm: (AuthManager.ScanSettings, Double?, Double?) -> Unit
 ) {
     var scale by remember { mutableStateOf(initialSettings.scale.toString()) }
     var permanenceDays by remember { mutableStateOf(initialSettings.permanenceDays.toString()) }
     var photosPerScan by remember { mutableStateOf(initialSettings.photosPerScan.toString()) }
     var measureType by remember { mutableStateOf(initialSettings.measureType) }
+    
+    // Location State
+    var latStr by remember(initialLat) { mutableStateOf(initialLat?.toString() ?: "") }
+    var lonStr by remember(initialLon) { mutableStateOf(initialLon?.toString() ?: "") }
     
     val currentDate = remember {
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
@@ -99,6 +109,61 @@ fun ScanDialog(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+                
+                // Location Section
+                Text(
+                    text = "Posizione (GPS)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = latStr,
+                        onValueChange = { latStr = it },
+                        label = { Text("Lat") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = lonStr,
+                        onValueChange = { lonStr = it },
+                        label = { Text("Lon") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onCurrentLocationRequest,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextPrimary),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("GPS", fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = onMapRequest,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE), contentColor = TextPrimary),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Mappa", fontSize = 12.sp)
+                    }
+                }
 
                 // Parameters Form
                 OutlinedTextField(
@@ -176,7 +241,9 @@ fun ScanDialog(
                 Button(
                     onClick = {
                         val settings = validateAndCreateSettings(scale, permanenceDays, measureType, photosPerScan)
-                        onConfirm(settings)
+                        val lat = latStr.replace(',', '.').toDoubleOrNull()
+                        val lon = lonStr.replace(',', '.').toDoubleOrNull()
+                        onConfirm(settings, lat, lon)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = TextPrimary),
                     shape = RoundedCornerShape(12.dp),
