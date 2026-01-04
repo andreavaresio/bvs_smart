@@ -1,6 +1,20 @@
 STORICO DELLE MODIFICHE (CHANGELOG)
 ================================================================================
 
+VERSION 1.1.14 (04 GENNAIO 2026)
+=================================
+
+QA & TESTING:
+- Testato flusso di accesso con diversi ruoli utente.
+- Verificato e validato il flusso di login automatico.
+- Analisi necessità tracciamento versione app (Completata).
+
+DEBUGGING & LOGGING:
+- Implementato log di tutte le chiamate di rete.
+- Aggiunto tasto per condividere il log file.
+- Implementato salvataggio su file del log di rete.
+- Recuperate specifiche ufficiali API Login.
+
 VERSION 1.1.10 (23 DICEMBRE 2025)
 =================================
 

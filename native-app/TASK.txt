@@ -6,13 +6,6 @@ CURRENT SPRINT: LOGIN & SECURE AUTH
 Obiettivo: Gestire l'accesso e la persistenza sicura delle credenziali.
 
 [ ] Mostrare la lista degli invii
-[X] Recuperare le SPECIFICHE UFFICIALI delle API di Login (campi e risposte)
-[ ] Testare il flusso di accesso con TUTTI GLI UTENTI e i vari RUOLI
-[ ] Verificare il flusso di login automatico se le credenziali sono presenti
-[X] log di tutte le chiamate di rete
-[X] tasto per condividere il log file
-[X] salvare in qualche modo il log file
-[ ] serve tracciare chi prova l'app e a quale versione?
 
 EPIC 3: BACKEND & DATA SYNC
 ===========================
