@@ -7,6 +7,13 @@ VERSION 1.1.14 (04 GENNAIO 2026)
 FEATURE:
 - Implementata dialog di conferma uscita con design brandizzato.
 - Gestione intelligente del tasto "Back" di sistema tra le varie schermate.
+- GEOLOCALIZZAZIONE:
+  - Selezione posizione GPS (Mappa OpenStreetMap o GPS device) per ogni scansione.
+  - Coordinate "sticky": l'app ricorda l'ultima posizione impostata per ogni arnia.
+  - Visualizzazione mappa Apiario dalla Home (Toolbar).
+  - Visualizzazione mappa Arnia (se impostata localmente) dalla lista.
+- CAMERA:
+  - Aggiunta opzione "Camera Esterna" per scatti ad alta risoluzione (50MP).
 
 QA & TESTING:
 - Testato flusso di accesso con diversi ruoli utente.

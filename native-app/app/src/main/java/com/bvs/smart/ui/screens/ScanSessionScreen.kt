@@ -237,24 +237,55 @@ fun PhotoSlot(
 fun SourceSelectionDialog(
     onDismiss: () -> Unit,
     onCamera: () -> Unit,
+    onExternalCamera: () -> Unit,
     onGallery: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Aggiungi Foto") },
-        text = { Text("Scegli da dove acquisire la foto.") },
-        confirmButton = {
-            TextButton(onClick = onCamera) {
-                Icon(Icons.Default.CameraAlt, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Camera")
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Scegli da dove acquisire la foto.", modifier = Modifier.padding(bottom = 8.dp))
+                
+                Button(
+                    onClick = onCamera,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = TextPrimary)
+                ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Camera")
+                }
+
+                Button(
+                    onClick = onExternalCamera,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray, contentColor = TextPrimary)
+                ) {
+                    Icon(Icons.Rounded.Image, contentDescription = null) // Using Image icon as generic placeholder or PhotoCamera if available
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Camera Esterna")
+                }
+
+                Button(
+                    onClick = onGallery,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextPrimary),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
+                ) {
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Galleria")
+                }
             }
         },
+        confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onGallery) {
-                Icon(Icons.Default.PhotoLibrary, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Galleria")
+            TextButton(onClick = onDismiss) {
+                Text("Annulla")
             }
         },
         containerColor = Color.White,
