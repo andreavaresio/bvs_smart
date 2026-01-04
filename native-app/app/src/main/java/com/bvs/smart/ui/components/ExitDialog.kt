@@ -14,7 +14,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ExitAlertDialog(
+fun ConfirmDialog(
+    title: String,
+    message: String? = null,
+    confirmText: String = "CONFERMA",
+    cancelText: String = "Cancella",
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -34,17 +38,27 @@ fun ExitAlertDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Uscire dall'app?",
+                    text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
                     textAlign = TextAlign.Center
                 )
                 
+                if (message != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = message,
+                        fontSize = 16.sp,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 PrimaryButton(
-                    text = "ESCI",
+                    text = confirmText,
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth(),
                     fixedWidth = false
@@ -57,7 +71,7 @@ fun ExitAlertDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Cancella",
+                        text = cancelText,
                         color = TextSecondary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
@@ -66,4 +80,17 @@ fun ExitAlertDialog(
             }
         }
     }
+}
+
+@Composable
+fun ExitAlertDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    ConfirmDialog(
+        title = "Uscire dall'app?",
+        confirmText = "ESCI",
+        onDismiss = onDismiss,
+        onConfirm = onConfirm
+    )
 }

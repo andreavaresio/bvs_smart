@@ -56,6 +56,7 @@ import com.bvs.smart.data.Apiary
 import com.bvs.smart.data.Arnia
 import com.bvs.smart.network.AuthManager
 import com.bvs.smart.ui.components.AppBackground
+import com.bvs.smart.ui.components.ConfirmDialog
 import com.bvs.smart.ui.components.TextPrimary
 import com.bvs.smart.ui.components.TextSecondary
 import com.bvs.smart.ui.components.YellowPrimary
@@ -104,6 +105,7 @@ fun HomeScreen(
     }
     
     var showScanDialogForHive by remember { mutableStateOf<Arnia?>(null) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Logic for Nested Drawers
     // We nest the LEFT drawer INSIDE the RIGHT drawer to try and allow swipe gestures for both.
@@ -123,7 +125,10 @@ fun HomeScreen(
                             versionName = versionName,
                             versionCode = versionCode,
                             onShareLogs = onShareLogs,
-                            onLogout = onLogout
+                            onLogout = {
+                                scope.launch { rightDrawerState.close() }
+                                showLogoutDialog = true
+                            }
                         )
                     }
                 }
@@ -238,6 +243,18 @@ fun HomeScreen(
             onConfirm = { newSettings ->
                 showScanDialogForHive = null
                 onScanRequest(targetHive, newSettings)
+            }
+        )
+    }
+
+    if (showLogoutDialog) {
+        ConfirmDialog(
+            title = "Vuoi disconnetterti?",
+            confirmText = "LOGOUT",
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
             }
         )
     }
