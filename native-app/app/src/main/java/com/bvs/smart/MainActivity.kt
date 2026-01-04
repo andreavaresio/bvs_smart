@@ -126,20 +126,6 @@ class MainActivity : ComponentActivity() {
             }
             var showExitDialog by remember { mutableStateOf(false) }
 
-            BackHandler {
-                when (currentScreen) {
-                    MainScreen.HOME, MainScreen.LOGIN -> {
-                        showExitDialog = true
-                    }
-                    MainScreen.SCAN_SESSION -> {
-                        currentScreen = MainScreen.HOME
-                    }
-                    MainScreen.GALLERY -> {
-                        currentScreen = MainScreen.SCAN_SESSION
-                    }
-                }
-            }
-
             var apiaryList by remember { mutableStateOf(initialApiaries) }
             var selectedApiary by remember { mutableStateOf(initialApiary) }
             
@@ -251,77 +237,15 @@ class MainActivity : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize()) {
                 Crossfade(targetState = currentScreen, label = "screen_transition") { screen ->
                     when (screen) {
-                        MainScreen.LOGIN -> LoginScreen(
-                            onLoginSuccess = { username, password ->
-                                scope.launch {
-                                    isLoggingIn = true
-                                    loginError = null
-                                    try {
-                                        val response = apiRepository.getResources(username, password, Config.SCANNER_ID)
-                                        if (response.isSuccessful) {
-                                            val payload = response.body().orEmpty()
-                                            payload.forEach { owner ->
-                                                owner.apiaries.forEach { it.ownerName = owner.ownerName }
-                                            }
-                                            val allApiaries = payload.flatMap { it.apiaries }
-                                            apiaryList = allApiaries
-                                            if (allApiaries.isNotEmpty()) {
-                                                val previousSelection = authManager.loadSelection()
-                                                val matchingApiary = allApiaries.find { it.name == previousSelection.apiaryName }
-                                                    ?: allApiaries.first()
-                                                
-                                                selectedApiary = matchingApiary
-                                                scanSettings = authManager.loadScanSettings()
-
-                                                savedUsername = username
-                                                savedPassword = password
-                                                authManager.saveSelection(
-                                                    apiaryName = selectedApiary?.name,
-                                                    hiveCode = null,
-                                                    scale = scanSettings.scale
-                                                )
-                                                currentScreen = MainScreen.HOME
-                                            } else {
-                                                selectedApiary = null
-                                                loginError = "Nessun dato disponibile."
-                                            }
-                                        } else {
-                                            loginError = "Credenziali errate."
-                                        }
-                                    } catch (error: Exception) {
-                                        if (apiaryList.isNotEmpty() && username == savedUsername && password == savedPassword) {
-                                            currentScreen = MainScreen.HOME
-                                        } else {
-                                            loginError = "Errore di rete: ${error.message}"
-                                        }
-                                    } finally {
-                                        isLoggingIn = false
-                                    }
-                                }
-                            },
-                            isLoading = isLoggingIn,
-                            errorMessage = loginError,
-                            initialUsername = savedUsername,
-                            initialPassword = savedPassword,
-                            versionName = versionName,
-                            versionCode = versionCode
-                        )
-
-                        MainScreen.HOME -> HomeScreen(
-                            selectedApiary = selectedApiary,
-                            apiaryList = apiaryList,
-                            scanSettings = scanSettings,
-                            versionName = versionName,
-                            versionCode = versionCode,
-                            baseUrl = Config.API_BASE_URL,
-                            loggedUsername = savedUsername,
-                            isRefreshing = isRefreshing,
-                            onRefresh = {
-                                if (savedUsername.isNotBlank() && savedPassword.isNotBlank()) {
+                        MainScreen.LOGIN -> {
+                            BackHandler { showExitDialog = true }
+                            LoginScreen(
+                                onLoginSuccess = { username, password ->
                                     scope.launch {
-                                        isRefreshing = true
+                                        isLoggingIn = true
+                                        loginError = null
                                         try {
-                                            val response = apiRepository.getResources(savedUsername, savedPassword, Config.SCANNER_ID)
+                                            val response = apiRepository.getResources(username, password, Config.SCANNER_ID)
                                             if (response.isSuccessful) {
                                                 val payload = response.body().orEmpty()
                                                 payload.forEach { owner ->
@@ -329,62 +253,131 @@ class MainActivity : ComponentActivity() {
                                                 }
                                                 val allApiaries = payload.flatMap { it.apiaries }
                                                 apiaryList = allApiaries
-                                                
-                                                // Update selectedApiary if it still exists, else pick first
                                                 if (allApiaries.isNotEmpty()) {
-                                                    val currentName = selectedApiary?.name
-                                                    selectedApiary = allApiaries.find { it.name == currentName } ?: allApiaries.first()
+                                                    val previousSelection = authManager.loadSelection()
+                                                    val matchingApiary = allApiaries.find { it.name == previousSelection.apiaryName }
+                                                        ?: allApiaries.first()
+                                                    
+                                                    selectedApiary = matchingApiary
+                                                    scanSettings = authManager.loadScanSettings()
+
+                                                    savedUsername = username
+                                                    savedPassword = password
+                                                    authManager.saveSelection(
+                                                        apiaryName = selectedApiary?.name,
+                                                        hiveCode = null,
+                                                        scale = scanSettings.scale
+                                                    )
+                                                    currentScreen = MainScreen.HOME
                                                 } else {
                                                     selectedApiary = null
+                                                    loginError = "Nessun dato disponibile."
                                                 }
-                                                
-                                                authManager.saveResources(payload) // Persist updated data
-                                                Toast.makeText(context, "Dati aggiornati", Toast.LENGTH_SHORT).show()
                                             } else {
-                                                Toast.makeText(context, "Errore aggiornamento: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                                loginError = "Credenziali errate."
                                             }
-                                        } catch (e: Exception) {
-                                            Toast.makeText(context, "Errore di rete", Toast.LENGTH_SHORT).show()
+                                        } catch (error: Exception) {
+                                            if (apiaryList.isNotEmpty() && username == savedUsername && password == savedPassword) {
+                                                currentScreen = MainScreen.HOME
+                                            } else {
+                                                loginError = "Errore di rete: ${error.message}"
+                                            }
                                         } finally {
-                                            isRefreshing = false
+                                            isLoggingIn = false
                                         }
                                     }
-                                } else {
-                                    isRefreshing = false
+                                },
+                                isLoading = isLoggingIn,
+                                errorMessage = loginError,
+                                initialUsername = savedUsername,
+                                initialPassword = savedPassword,
+                                versionName = versionName,
+                                versionCode = versionCode
+                            )
+                        }
+
+                        MainScreen.HOME -> {
+                            BackHandler { showExitDialog = true }
+                            HomeScreen(
+                                selectedApiary = selectedApiary,
+                                apiaryList = apiaryList,
+                                scanSettings = scanSettings,
+                                versionName = versionName,
+                                versionCode = versionCode,
+                                baseUrl = Config.API_BASE_URL,
+                                loggedUsername = savedUsername,
+                                isRefreshing = isRefreshing,
+                                onRefresh = {
+                                    if (savedUsername.isNotBlank() && savedPassword.isNotBlank()) {
+                                        scope.launch {
+                                            isRefreshing = true
+                                            try {
+                                                val response = apiRepository.getResources(savedUsername, savedPassword, Config.SCANNER_ID)
+                                                if (response.isSuccessful) {
+                                                    val payload = response.body().orEmpty()
+                                                    payload.forEach { owner ->
+                                                        owner.apiaries.forEach { it.ownerName = owner.ownerName }
+                                                    }
+                                                    val allApiaries = payload.flatMap { it.apiaries }
+                                                    apiaryList = allApiaries
+                                                    
+                                                    // Update selectedApiary if it still exists, else pick first
+                                                    if (allApiaries.isNotEmpty()) {
+                                                        val currentName = selectedApiary?.name
+                                                        selectedApiary = allApiaries.find { it.name == currentName } ?: allApiaries.first()
+                                                    } else {
+                                                        selectedApiary = null
+                                                    }
+                                                    
+                                                    authManager.saveResources(payload) // Persist updated data
+                                                    Toast.makeText(context, "Dati aggiornati", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, "Errore aggiornamento: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Errore di rete", Toast.LENGTH_SHORT).show()
+                                            } finally {
+                                                isRefreshing = false
+                                            }
+                                        }
+                                    } else {
+                                        isRefreshing = false
+                                    }
+                                },
+                                onApiarySelected = { apiary ->
+                                    selectedApiary = apiary
+                                    authManager.saveSelection(
+                                        apiaryName = selectedApiary?.name,
+                                        hiveCode = null,
+                                        scale = scanSettings.scale
+                                    )
+                                },
+                                onScanRequest = { hive, settings ->
+                                    // Prepare Session
+                                    currentSessionHive = hive
+                                    scanSettings = settings
+                                    // Initialize photo slots (nulls)
+                                    currentSessionPhotos = List(settings.photosPerScan) { null }
+                                    
+                                    authManager.saveScanSettings(
+                                        settings.scale, settings.permanenceDays, settings.measureType, settings.photosPerScan
+                                    )
+                                    
+                                    currentScreen = MainScreen.SCAN_SESSION
+                                },
+                                onShareLogs = shareLogs,
+                                onLogout = {
+                                    authManager.logout()
+                                    apiaryList = emptyList()
+                                    selectedApiary = null
+                                    savedPassword = "" // Reset UI state password
+                                    currentScreen = MainScreen.LOGIN
                                 }
-                            },
-                            onApiarySelected = { apiary ->
-                                selectedApiary = apiary
-                                authManager.saveSelection(
-                                    apiaryName = selectedApiary?.name,
-                                    hiveCode = null,
-                                    scale = scanSettings.scale
-                                )
-                            },
-                            onScanRequest = { hive, settings ->
-                                // Prepare Session
-                                currentSessionHive = hive
-                                scanSettings = settings
-                                // Initialize photo slots (nulls)
-                                currentSessionPhotos = List(settings.photosPerScan) { null }
-                                
-                                authManager.saveScanSettings(
-                                    settings.scale, settings.permanenceDays, settings.measureType, settings.photosPerScan
-                                )
-                                
-                                currentScreen = MainScreen.SCAN_SESSION
-                            },
-                            onShareLogs = shareLogs,
-                            onLogout = {
-                                authManager.logout()
-                                apiaryList = emptyList()
-                                selectedApiary = null
-                                savedPassword = "" // Reset UI state password
-                                currentScreen = MainScreen.LOGIN
-                            }
-                        )
+                            )
+                        }
 
                         MainScreen.SCAN_SESSION -> {
+                            BackHandler { currentScreen = MainScreen.HOME }
                             val hive = currentSessionHive
                             if (hive != null) {
                                 ScanSessionScreen(
@@ -421,19 +414,22 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        MainScreen.GALLERY -> GalleryScreen(
-                            onPhotoSelected = { uri ->
-                                val slot = activeSlotIndex
-                                if (slot != null && slot in currentSessionPhotos.indices) {
-                                    val newList = currentSessionPhotos.toMutableList()
-                                    newList[slot] = uri
-                                    currentSessionPhotos = newList
-                                }
-                                activeSlotIndex = null
-                                currentScreen = MainScreen.SCAN_SESSION
-                            },
-                            onBack = { currentScreen = MainScreen.SCAN_SESSION }
-                        )
+                        MainScreen.GALLERY -> {
+                            BackHandler { currentScreen = MainScreen.SCAN_SESSION }
+                            GalleryScreen(
+                                onPhotoSelected = { uri ->
+                                    val slot = activeSlotIndex
+                                    if (slot != null && slot in currentSessionPhotos.indices) {
+                                        val newList = currentSessionPhotos.toMutableList()
+                                        newList[slot] = uri
+                                        currentSessionPhotos = newList
+                                    }
+                                    activeSlotIndex = null
+                                    currentScreen = MainScreen.SCAN_SESSION
+                                },
+                                onBack = { currentScreen = MainScreen.SCAN_SESSION }
+                            )
+                        }
                     }
                 }
 
