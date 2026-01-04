@@ -4,6 +4,10 @@ STORICO DELLE MODIFICHE (CHANGELOG)
 VERSION 1.1.14 (04 GENNAIO 2026)
 =================================
 
+FEATURE:
+- Implementata dialog di conferma uscita con design brandizzato.
+- Gestione intelligente del tasto "Back" di sistema tra le varie schermate.
+
 QA & TESTING:
 - Testato flusso di accesso con diversi ruoli utente.
 - Verificato e validato il flusso di login automatico.

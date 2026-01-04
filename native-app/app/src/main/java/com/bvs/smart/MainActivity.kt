@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,6 +47,7 @@ import com.bvs.smart.network.ApiRepository
 import com.bvs.smart.network.AuthManager
 import com.bvs.smart.network.DeviceManager
 import com.bvs.smart.utils.LogManager
+import com.bvs.smart.ui.components.ExitAlertDialog
 import com.bvs.smart.ui.components.YellowPrimary
 import com.bvs.smart.ui.screens.GalleryScreen
 import com.bvs.smart.ui.screens.HomeScreen
@@ -122,6 +124,22 @@ class MainActivity : ComponentActivity() {
                     if (hasCachedCredentials && initialApiaries.isNotEmpty()) MainScreen.HOME else MainScreen.LOGIN
                 )
             }
+            var showExitDialog by remember { mutableStateOf(false) }
+
+            BackHandler {
+                when (currentScreen) {
+                    MainScreen.HOME, MainScreen.LOGIN -> {
+                        showExitDialog = true
+                    }
+                    MainScreen.SCAN_SESSION -> {
+                        currentScreen = MainScreen.HOME
+                    }
+                    MainScreen.GALLERY -> {
+                        currentScreen = MainScreen.SCAN_SESSION
+                    }
+                }
+            }
+
             var apiaryList by remember { mutableStateOf(initialApiaries) }
             var selectedApiary by remember { mutableStateOf(initialApiary) }
             
@@ -458,6 +476,13 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Invio ${scanSettings.photosPerScan} foto...", color = Color.White)
                         }
                     }
+                }
+
+                if (showExitDialog) {
+                    ExitAlertDialog(
+                        onDismiss = { showExitDialog = false },
+                        onConfirm = { finish() }
+                    )
                 }
             }
         }

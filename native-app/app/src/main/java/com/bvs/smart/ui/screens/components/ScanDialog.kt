@@ -139,22 +139,34 @@ fun ScanDialog(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.align(Alignment.Start)
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = measureType == "CadutaNaturale",
-                        onClick = { measureType = "CadutaNaturale" },
-                        colors = RadioButtonDefaults.colors(selectedColor = YellowPrimary)
-                    )
-                    Text("Caduta Naturale", fontSize = 14.sp)
+                
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { measureType = "CadutaNaturale" }
+                    ) {
+                        RadioButton(
+                            selected = measureType == "CadutaNaturale",
+                            onClick = { measureType = "CadutaNaturale" },
+                            colors = RadioButtonDefaults.colors(selectedColor = YellowPrimary)
+                        )
+                        Text("Caduta Naturale", fontSize = 14.sp)
+                    }
                     
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
-                    RadioButton(
-                        selected = measureType == "Trattamento",
-                        onClick = { measureType = "Trattamento" },
-                        colors = RadioButtonDefaults.colors(selectedColor = YellowPrimary)
-                    )
-                    Text("Trattamento", fontSize = 14.sp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { measureType = "Trattamento" }
+                    ) {
+                        RadioButton(
+                            selected = measureType == "Trattamento",
+                            onClick = { measureType = "Trattamento" },
+                            colors = RadioButtonDefaults.colors(selectedColor = YellowPrimary)
+                        )
+                        Text("Trattamento", fontSize = 14.sp)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
