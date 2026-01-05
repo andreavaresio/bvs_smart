@@ -243,16 +243,18 @@ fun SourceSelectionDialog(
             ) {
                 Text("Scegli da dove acquisire la foto.", modifier = Modifier.padding(bottom = 8.dp))
                 
+                // Galleria first (Yellow)
                 Button(
-                    onClick = onCamera,
+                    onClick = onGallery,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = TextPrimary)
                 ) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = null)
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Camera")
+                    Text("Galleria")
                 }
 
+                // Camera Esterna second (LightGray)
                 Button(
                     onClick = onExternalCamera,
                     modifier = Modifier.fillMaxWidth(),
@@ -261,17 +263,6 @@ fun SourceSelectionDialog(
                     Icon(Icons.Rounded.Image, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Camera Esterna")
-                }
-
-                Button(
-                    onClick = onGallery,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextPrimary),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
-                ) {
-                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Galleria")
                 }
             }
         },

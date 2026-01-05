@@ -1,3 +1,5 @@
 jupyterlab
 Pillow
 pandas
+scikit-image
+scipy
