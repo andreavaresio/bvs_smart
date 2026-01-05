@@ -1,0 +1,29 @@
+# Getting Started: Image EXIF & Algorithm Analysis
+
+This environment allows you to compare 'coin.jpg' and 'varroe.jpg' using a Jupyter Notebook.
+
+## Prerequisites
+- Docker and Docker Compose installed on your system.
+
+## 1. Start the Environment
+Run the following command in your terminal within this folder:
+
+   docker-compose up --build
+
+Wait for the build to finish. You will see logs indicating that Jupyter Lab is running.
+
+## 2. Access the Notebook
+1. Open your browser and go to: http://localhost:8888
+2. In the left-hand sidebar, double-click on 'comparison.ipynb'.
+
+## 3. Run the Analysis
+1. Once the notebook is open, click the "Play" icon (Run) in the toolbar or press 'Shift + Enter' on your keyboard while the code cell is selected.
+2. The script will:
+   - Extract EXIF metadata (Camera, Date, Settings).
+   - Extract Quantization Tables (These are the "fingerprints" of the JPEG compression algorithm).
+   - Display a side-by-side comparison table.
+
+## 4. Shutting Down
+To stop the environment, press 'Ctrl + C' in your terminal and then run:
+
+   docker-compose down
